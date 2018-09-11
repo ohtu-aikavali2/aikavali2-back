@@ -2,8 +2,8 @@
   "swagger": "2.0",
   "info": {
     "version": "1.0.0",
-    "title": "CD-PIPELINE-SKELETON",
-    "description": "Skeleton for a cd node project"
+    "title": "AIKAVALI-BACK",
+    "description": "Backend for the ohtu aikavali project"
   },
   "host": "localhost:8080",
   "basePath": "/api/v1",
