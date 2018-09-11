@@ -6,9 +6,9 @@ script:
 - npm run lint
 - npm run codecov
 deploy:
+  provider: heroku
   api_key:
-    provider: heroku
     secure: pFZFA1mllE0p5pDI/L7L2fd2aKxJ+XDqWyJ9Q3Qtu80SGF6Zed0wdxSoWN1fWW69QMoWwnZeNyfItCcCJVYvj5xAaOFVGhHysRKXkZs/wHwlBqM48txeaGPkqeeRM4lS1i1pHedKNc6SjAq9VbDJ9k+OxnUT15mVXFxUkstQ8L4CyHIpTY6vXVtQVJAC4P1xgXRWSFD2RT4cWsfGMM6ZW21rWD42+qaeJGFefFnhQTn+pJ6Zsm1goayF6N2CgU82bGneKww3hzDIdQwYujHhgSPlTx5nliGI/UPjoe6RT6ofTKkpJSFutb7/Lzs4rzUIew0bQs6loivDDnYwjNsi3Y9RSG+RaMiuorGVY203egyxv1w7XOQf+DHf03WqPud+4woqQZ1LtJDsXr35S3QJbK1N2mHnqgPP+2GZ5zMF0QvnIrXHiQxqTYzpne4OCzcTg8/vjLGI1uLQrWKJ3QHmssN+OYDJ3dH0k9AAOStNaKC54tSzb78MphZ3Veh0ObsznK5ur9u1B/U6FICCcomMzOqtku58uNgDaDerEckkflzjW+Ntm8KqgMZredaraK/pNL9jzJXnm/yk6zwRCmTa+NMuJauS/RmOzTEMoX9Am9wSGscr4kwTptT4BXZinmttZUL+EASjZj3izSX/Vva/gJe4Xv5pgtmeXKdoHdJhrC4=
-    app: aikavali-back
-    on:
-      branch: master
+  app: aikavali-back
+  on:
+    branch: master
