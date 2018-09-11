@@ -1,5 +1,5 @@
 # aikavali-back
-[![Build Status](https://travis-ci.org/ohtu-aikavali/aikavali-back.svg?branch=master)](https://travis-ci.org/ohtu-aikavali/aikavali-back)  
+[![Build Status](https://travis-ci.org/ohtu-aikavali/aikavali-back.svg?branch=master)](https://travis-ci.org/ohtu-aikavali/aikavali-back)
 [![codecov](https://codecov.io/gh/ohtu-aikavali/aikavali-back/branch/master/graph/badge.svg)](https://codecov.io/gh/ohtu-aikavali/aikavali-back)  
 
 
