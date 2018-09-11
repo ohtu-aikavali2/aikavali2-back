@@ -1,0 +1,14 @@
+language: node_js
+node_js:
+- '8'
+script:
+- npm run test
+- npm run lint
+- npm run codecov
+deploy:
+  api_key:
+    provider: heroku
+    secure: XxzBHyE8wEGVfLaYgWVDT0CAY901cNGCsxcfdkXH/RBnnEDoZr712vgUL/I6h334amJb67x6eD7kILsW43fcakzakk0e6vUwusZATC8Kt0cmz/x8KhfA3YdYmXT3c2MvCdZFQ33m3B0v1Gip3xsUio9TSoTBeTKeecgNuRvEgJWQ7BL20QpptjFImPUe4QOn8FUs38Jt/41uZyRcU0ur0HLIF4qUfh7BerfZ01lpfYMd/0FHBhF8IL1pl6PaojI9fzqrTHgiQ2ZcC1+zDPlzIBmYvBfSE1GBhUKd2LMeAhfj65c5yBh41np8w61n8NqR2W6hHboEppKLF0sKnfkFi42VWxD5wxRWyoXZGcqt6sTFwH8VijxYieXx83zUNAoxy6hjqqLmfLU4EBoBgeYSeeSu0CAZrfcyyseogA0p7mVSflxPQ4v8V1Oe0GSjO7WDKtxFdAEknLXfB36CcWY7AUbVeOkJFLirxP3vb8Wn8Tay4F2gGY4xiSBDb/DLYUnVGtQDN+R/9VeimIlNo+u4q24pgotsC+kCUKrMAGB+NAiL7lOukKqFlfFQ7BqOUK2X6ASqCCFEc5mSf96KKdpTC8D9I225vvbORA42W3jKpM80BcfNPZ+oAGPDh4gRP5+L1hUPjDAzhbLJyOptaat/PSWsc0r+WwZrGOsVBFWyZfM=
+    app: aikavali-back
+    on:
+      branch: master
