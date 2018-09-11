@@ -5,7 +5,7 @@
   "main": "./src/server.js",
   "scripts": {
     "start": "cross-env NODE_ENV=production node ./src/server.js",
-    "watch": "cross-env NODE_ENV=development node_modules/.bin/nodemon ./src/server.js",
+    "watch": "cross-env NODE_ENV=development nodemon ./src/server.js",
     "test": "cross-env NODE_ENV=test node_modules/.bin/jest --verbose",
     "lint": "node_modules/.bin/eslint .",
     "codecov": "node_modules/.bin/codecov",
@@ -27,6 +27,7 @@
     "cors": "^2.8.4",
     "express": "^4.16.3",
     "helmet": "^3.13.0",
+    "mongoose": "^5.2.14",
     "morgan": "^1.9.0",
     "swagger-ui-express": "^4.0.1"
   },
