@@ -19,6 +19,7 @@ Add two environmental variables into the .env file:
 ```
 PORT=X
 TEST_PORT=Y
+DB_URI=URL_TO_MONGO_DB
 ```
 
 Start the project:
