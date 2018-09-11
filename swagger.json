@@ -11,6 +11,10 @@
     {
       "name": "Example",
       "description": "Example API endpoints"
+    },
+    {
+      "name": "Questions",
+      "description": "Question APIs"
     }
   ],
   "schemes": [
@@ -33,6 +37,38 @@
         "responses": {
           "200": {
             "description": "OK"
+          }
+        }
+      }
+    },
+    "/questions": {
+      "get": {
+        "tags": [
+          "Questions"
+        ],
+        "summary": "Returns all different questions",
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "500": {
+            "description": "ERROR"
+          }
+        }
+      }
+    },
+    "/questions/random": {
+      "get": {
+        "tags": [
+          "Questions"
+        ],
+        "summary": "Returns a random question",
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "500": {
+            "description": "ERROR"
           }
         }
       }
