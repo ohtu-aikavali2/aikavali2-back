@@ -14,12 +14,15 @@
     },
     {
       "name": "Questions",
-      "description": "Question APIs"
+      "description": "Question API"
+    },
+    {
+      "name": "User",
+      "description": "User API"
     }
   ],
   "schemes": [
-    "http",
-    "https"
+    "http"
   ],
   "consumes": [
     "application/json"
@@ -27,6 +30,13 @@
   "produces": [
     "application/json"
   ],
+  "securityDefinitions": {
+    "Bearer": {
+      "type": "apiKey",
+      "name": "Authorization",
+      "in": "header"
+    }
+  },
   "paths": {
     "/example": {
       "get": {
@@ -63,6 +73,41 @@
           "Questions"
         ],
         "summary": "Returns a random question",
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "500": {
+            "description": "ERROR"
+          }
+        }
+      }
+    },
+    "/user/generate": {
+      "post": {
+        "tags": [
+          "User"
+        ],
+        "summary": "Creates a new user and returns a jsonwebtoken",
+        "responses": {
+          "201": {
+            "description": "CREATED"
+          },
+          "500": {
+            "description": "ERROR"
+          }
+        }
+      }
+    },
+    "/user/verifyToken": {
+      "get": {
+        "tags": [
+          "User"
+        ],
+        "summary": "Checks whether a token is valid",
+        "security": [
+          {"Bearer": []}
+        ],
         "responses": {
           "200": {
             "description": "OK"
