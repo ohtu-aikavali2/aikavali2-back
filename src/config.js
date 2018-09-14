@@ -4,7 +4,7 @@ const isProduction = process.env.NODE_ENV === 'production'
 if (!isProduction) {
   require('dotenv').config()
 } else {
-  swaggerDoc.host = 'cd-pipeline-skeleton.herokuapp.com'
+  swaggerDoc.host = 'aikavali-back.herokuapp.com'
   swaggerDoc.schemes = [ 'https' ]
 }
 
