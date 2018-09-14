@@ -72,6 +72,40 @@
           }
         }
       }
+    },
+    "/questions/answer": {
+      "post": {
+        "tags": [
+          "Questions"
+        ],
+        "summary": "Returns true if the given answer was correct",
+        "parameters": [
+          {
+            "in": "body",
+            "name": "id",
+            "description": "id of the question that was answered",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "body",
+            "name": "answer",
+            "description": "user's answer",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "{ isCorrect: true/false }"
+          },
+          "500": {
+            "description": "ERROR"
+          }
+        }
+      }
     }
   }
 }
