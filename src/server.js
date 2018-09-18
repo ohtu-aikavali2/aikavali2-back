@@ -18,14 +18,26 @@ if (process.env.NODE_ENV !== 'test') {
 }
 app.use(helmet())
 app.use(compression())
+app.use((req, res, next) => {
+  const auth = req.get('authorization')
+  if (auth && auth.toLowerCase().startsWith('bearer ')) {
+    req.body.token = auth.substring(7)
+  } else {
+    req.body.token = null
+  }
+  next()
+})
 
 // CONTROLLERS
 const apiUrl = '/api/v1'
 const exampleController = require('./controllers/example')
 const questionController = require('./controllers/questionController')
+const userController = require('./controllers/userController')
 app.use(`${apiUrl}/example`, exampleController)
 app.use(`${apiUrl}/questions`, questionController)
-app.use('/', swagger.serve, swagger.setup(config.swaggerDoc))
+app.use(`${apiUrl}/user`, userController)
+app.use(`${apiUrl}`, swagger.serve, swagger.setup(config.swaggerDoc))
+app.get('/', (req, res) => res.status(404).send(`This isn't the page you're looking for! Please go to <a href=${apiUrl}>${apiUrl}</a>`))
 
 // DATABASE
 mongoose
