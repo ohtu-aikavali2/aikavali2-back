@@ -6,8 +6,8 @@
   "scripts": {
     "start": "cross-env NODE_ENV=production node ./src/server.js",
     "watch": "cross-env NODE_ENV=development nodemon ./src/server.js",
-    "test": "cross-env NODE_ENV=test node_modules/.bin/jest --verbose",
-    "lint": "node_modules/.bin/eslint .",
+    "test": "cross-env NODE_ENV=test jest --verbose --runInBand",
+    "lint": "eslint .",
     "codecov": "node_modules/.bin/codecov",
     "precommit": "npm test && npm run lint"
   },
