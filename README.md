@@ -19,7 +19,8 @@ Add two environmental variables into the .env file:
 ```
 PORT=X
 TEST_PORT=Y
-DB_URI=URL_TO_MONGO_DB
+DB_URI_DEV=URL_TO_MONGO_DB_DEV
+DB_URI_TEST=URL_TO_MONGO_DB_TEST
 SECRET=Z
 ```
 

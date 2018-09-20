@@ -7,7 +7,7 @@ userRouter.post('/generate', async (req, res) => {
     const newUser = new User()
     await newUser.save()
     const token = jwt.sign({ userId: newUser._id }, process.env.SECRET)
-    res.status(201).json({ token })
+    res.status(201).json({ id: newUser._id, token })
   } catch (e) {
     console.error(e)
     res.status(500)
