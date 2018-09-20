@@ -9,14 +9,6 @@ const baseQuestionSchema = new mongoose.Schema({
   correctAnswer: { type: mongoose.Schema.Types.ObjectId, ref: 'CorrectAnswer' }
 })
 
-baseQuestionSchema.statics.format = (baseQuestion) => {
-  return {
-    _id: baseQuestion._id,
-    type: baseQuestion.type,
-    question: baseQuestion.question.item
-  }
-}
-
 const BaseQuestion = mongoose.model('BaseQuestion', baseQuestionSchema)
 
 module.exports = BaseQuestion
