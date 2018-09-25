@@ -7,8 +7,15 @@ const CompileQuestion = require('../../src/models/compileQuestion')
 const CorrectAnswer = require('../../src/models/correctAnswer')
 const testUrl = `${apiUrl}/questions`
 
-describe('question controller', () => {
+const getQuestionsOfType = async (type) => {
+  switch (type) {
+    case 'base': return await BaseQuestion.find({})
+    case 'compile': return await CompileQuestion.find({})
+    case 'print': return await PrintQuestion.find({})
+  }
+}
 
+describe('question controller', () => {
   beforeEach(async () => {
     await BaseQuestion.remove({})
     await PrintQuestion.remove({})
@@ -53,8 +60,42 @@ describe('question controller', () => {
     })
   })
 
+  describe(`${testUrl}/print`, () => {
+    test('POST', async () => {
+      const originalPrintQuestions = await getQuestionsOfType('print')
+      await api
+        .post(`${testUrl}/print`)
+        .send({ value: '?', correctAnswer: 'a', options: ['b', 'c', 'd'] })
+      const updatedPrintQuestions = await getQuestionsOfType('print')
+      expect(updatedPrintQuestions.length).toBe(originalPrintQuestions.length + 1)
+
+      const response = await api
+        .post(`${testUrl}/print`)
+        .send({})
+      expect(response.status).toBe(422)
+      expect(response.body.error).toBeTruthy()
+    })
+  })
+
+  describe(`${testUrl}/compile`, () => {
+    test('POST', async () => {
+      const originalCompileQuestions = await getQuestionsOfType('compile')
+      await api
+        .post(`${testUrl}/compile`)
+        .send({ correctAnswer: 'a', options: ['b', 'c', 'd'] })
+      const updatedCompileQuestions = await getQuestionsOfType('compile')
+      expect(updatedCompileQuestions.length).toBe(originalCompileQuestions.length + 1)
+
+      const response = await api
+        .post(`${testUrl}/compile`)
+        .send({})
+      expect(response.status).toBe(422)
+      expect(response.body.error).toBeTruthy()
+    })
+  })
+
   describe(`${testUrl}/answer`, () => {
-    test('GET', async () => {
+    test('POST', async () => {
       const questions = await BaseQuestion.find({}).populate('question.item')
       let response = await api
         .post(`${testUrl}/answer`)

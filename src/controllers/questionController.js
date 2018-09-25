@@ -10,7 +10,7 @@ questionRouter.get('/', async (req, res) => {
     res.status(200).json(baseQuestions)
   } catch (e) {
     console.error('e', e)
-    res.status(500)
+    res.status(500).json({ error: e.message })
   }
 })
 
@@ -21,13 +21,16 @@ questionRouter.get('/random', async (req, res) => {
     res.status(200).json(baseQuestion.question)
   } catch (e) {
     console.error('e', e)
-    res.status(500)
+    res.status(500).json({ error: e.message })
   }
 })
 
 questionRouter.post('/print', async (req, res) => {
   try {
     const { value, correctAnswer, options } = req.body
+    if (!(value && correctAnswer && options)) {
+      return res.status(422).json({ error: 'params missing' })
+    }
     const newCorrectAnswer = new CorrectAnswer({ value: correctAnswer })
     await newCorrectAnswer.save()
     const newPrintQuestion = new PrintQuestion({ value, options: options.concat(correctAnswer) })
@@ -41,13 +44,16 @@ questionRouter.post('/print', async (req, res) => {
     res.status(201).json(result)
   } catch (e) {
     console.error('e', e)
-    res.status(500)
+    res.status(500).json({ error: e.message })
   }
 })
 
 questionRouter.post('/compile', async (req, res) => {
   try {
     const { correctAnswer, options } = req.body
+    if (!(correctAnswer && options)) {
+      return res.status(422).json({ error: 'params missing' })
+    }
     const newCorrectAnswer = new CorrectAnswer({ value: correctAnswer })
     await newCorrectAnswer.save()
     const newCompileQuestion = new CompileQuestion({ options: options.concat(correctAnswer) })
@@ -61,19 +67,22 @@ questionRouter.post('/compile', async (req, res) => {
     res.status(201).json(result)
   } catch (e) {
     console.error('e', e)
-    res.status(500)
+    res.status(500).json({ error: e.message })
   }
 })
 
 questionRouter.post('/answer', async (req, res) => {
   try {
     const { id, answer } = req.body
+    if (!(id && answer)) {
+      return res.status(422).json({ error: 'params missing' })
+    }
     const answeredQuestion = await BaseQuestion.findOne({ 'question.item': id }).populate('correctAnswer')
     const isCorrectAnswer = answer === answeredQuestion.correctAnswer.value
     res.status(200).json({ isCorrect: isCorrectAnswer })
   } catch (e) {
     console.error('e', e)
-    res.status(500).json({ error: 'error' })
+    res.status(500).json({ error: e.message })
   }
 })
 
