@@ -29,7 +29,13 @@ questionRouter.post('/print', async (req, res) => {
   try {
     const { value, correctAnswer, options } = req.body
     if (!(value && correctAnswer && options)) {
-      return res.status(422).json({ error: 'params missing' })
+      return res.status(422).json({ error: 'some params missing' })
+    }
+
+    if (!Array.isArray(options)) {
+      return res.status(401).json({ error: 'options should be of type array' })
+    } else if (options.length === 0) {
+      return res.status(401).json({ error: 'there should be at least one option' })
     }
     const newCorrectAnswer = new CorrectAnswer({ value: correctAnswer })
     await newCorrectAnswer.save()
@@ -52,7 +58,13 @@ questionRouter.post('/compile', async (req, res) => {
   try {
     const { correctAnswer, options } = req.body
     if (!(correctAnswer && options)) {
-      return res.status(422).json({ error: 'params missing' })
+      return res.status(422).json({ error: 'some params missing' })
+    }
+
+    if (!Array.isArray(options)) {
+      return res.status(401).json({ error: 'options should be of type array' })
+    } else if (options.length === 0) {
+      return res.status(401).json({ error: 'there should be at least one option' })
     }
     const newCorrectAnswer = new CorrectAnswer({ value: correctAnswer })
     await newCorrectAnswer.save()
@@ -73,13 +85,17 @@ questionRouter.post('/compile', async (req, res) => {
 
 questionRouter.post('/answer', async (req, res) => {
   try {
-    const { id, answer } = req.body
+    const { id, answer, token } = req.body
     if (!(id && answer)) {
-      return res.status(422).json({ error: 'params missing' })
+      return res.status(422).json({ error: 'some params missing' })
+    }
+
+    if (!token) {
+      return res.status(401).json({ error: 'token missing' })
     }
     const answeredQuestion = await BaseQuestion.findOne({ 'question.item': id }).populate('correctAnswer')
-    const isCorrectAnswer = answer === answeredQuestion.correctAnswer.value
-    res.status(200).json({ isCorrect: isCorrectAnswer })
+    const isCorrect = answer === answeredQuestion.correctAnswer.value
+    res.status(200).json({ isCorrect, ...(!isCorrect && { correctAnswer: answeredQuestion.correctAnswer.value }) })
   } catch (e) {
     console.error('e', e)
     res.status(500).json({ error: e.message })
