@@ -48,7 +48,7 @@ describe('question controller', () => {
 
     await User.remove({})
     const response = await api
-      .post(`${testUrl}/generate`)
+      .post(`${apiUrl}/user/generate`)
     token = response.body.token
   })
 
