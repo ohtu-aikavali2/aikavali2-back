@@ -33,9 +33,11 @@ const apiUrl = '/api/v1'
 const exampleController = require('./controllers/example')
 const questionController = require('./controllers/questionController')
 const userController = require('./controllers/userController')
+const answerController = require('./controllers/answerController')
 app.use(`${apiUrl}/example`, exampleController)
 app.use(`${apiUrl}/questions`, questionController)
 app.use(`${apiUrl}/user`, userController)
+app.use(`${apiUrl}/answer`, answerController)
 app.use(`${apiUrl}`, swagger.serve, swagger.setup(config.swaggerDoc))
 app.get('/', (req, res) => res.status(404).send(`This isn't the page you're looking for! Please go to <a href=${apiUrl}>${apiUrl}</a>`))
 
