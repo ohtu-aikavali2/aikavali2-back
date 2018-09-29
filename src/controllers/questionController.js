@@ -1,8 +1,11 @@
+const jwt = require('jsonwebtoken')
 const questionRouter = require('express').Router()
 const BaseQuestion = require('../models/baseQuestion')
 const PrintQuestion = require('../models/printQuestion')
 const CompileQuestion = require('../models/compileQuestion')
 const CorrectAnswer = require('../models/correctAnswer')
+const User = require('../models/user')
+const Answer = require('../models/answer')
 
 questionRouter.get('/', async (req, res) => {
   try {
@@ -73,12 +76,25 @@ questionRouter.post('/compile', async (req, res) => {
 
 questionRouter.post('/answer', async (req, res) => {
   try {
-    const { id, answer } = req.body
+    const { id, answer, token } = req.body
     if (!(id && answer)) {
       return res.status(422).json({ error: 'params missing' })
     }
     const answeredQuestion = await BaseQuestion.findOne({ 'question.item': id }).populate('correctAnswer')
     const isCorrectAnswer = answer === answeredQuestion.correctAnswer.value
+
+    const { userId } = jwt.verify(token, process.env.SECRET)
+    const user = await User.findById(userId)
+    if (!user) {
+      return res.status(404).json({ error: 'user not found' })
+    }
+    const userAnswer = new Answer({ question: answeredQuestion._id, user: userId, isCorrect: isCorrectAnswer })
+    await userAnswer.save()
+
+    user.answers = user.answers.concat(userAnswer._id)
+    user.questions = user.questions.concat(answeredQuestion._id)
+    await user.save()
+
     res.status(200).json({ isCorrect: isCorrectAnswer })
   } catch (e) {
     console.error('e', e)

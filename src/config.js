@@ -9,7 +9,7 @@ if (!isProduction) {
 }
 
 let port = process.env.PORT
-let dbUri = process.env.DB_URI_DEV
+let dbUri = process.env.DB_URI
 
 if (process.env.NODE_ENV === 'test') {
   port = process.env.TEST_PORT

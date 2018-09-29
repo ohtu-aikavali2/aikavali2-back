@@ -4,7 +4,7 @@ const User = require('../models/user')
 
 userRouter.post('/generate', async (req, res) => {
   try {
-    const newUser = new User()
+    const newUser = new User({ questions: [], answers: [] })
     await newUser.save()
     const token = jwt.sign({ userId: newUser._id }, process.env.SECRET)
     res.status(201).json({ id: newUser._id, token })

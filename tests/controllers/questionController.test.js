@@ -5,6 +5,7 @@ const BaseQuestion = require('../../src/models/baseQuestion')
 const PrintQuestion = require('../../src/models/printQuestion')
 const CompileQuestion = require('../../src/models/compileQuestion')
 const CorrectAnswer = require('../../src/models/correctAnswer')
+const User = require('../../src/models/user')
 const testUrl = `${apiUrl}/questions`
 
 const getQuestionsOfType = async (type) => {
@@ -16,6 +17,8 @@ const getQuestionsOfType = async (type) => {
 }
 
 describe('question controller', () => {
+  let token
+
   beforeEach(async () => {
     await BaseQuestion.remove({})
     await PrintQuestion.remove({})
@@ -42,6 +45,11 @@ describe('question controller', () => {
       correctAnswer: newCorrectAnswer._id
     })
     await q2.save()
+
+    await User.remove({})
+    const response = await api
+      .post(`${apiUrl}/user/generate`)
+    token = response.body.token
   })
 
   describe(testUrl, () => {
@@ -100,10 +108,12 @@ describe('question controller', () => {
       let response = await api
         .post(`${testUrl}/answer`)
         .send({ id: questions[0].question.item._id, answer: 'test' })
+        .set('Authorization', `bearer ${ token }`)
       expect(response.body.isCorrect).toBe(true)
       response = await api
         .post(`${testUrl}/answer`)
         .send({ id: questions[0].question.item._id, answer: 'wrong' })
+        .set('Authorization', `bearer ${ token }`)
       expect(response.body.isCorrect).toBe(false)
     })
   })
