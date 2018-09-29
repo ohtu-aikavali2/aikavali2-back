@@ -32,7 +32,13 @@ questionRouter.post('/print', async (req, res) => {
   try {
     const { value, correctAnswer, options } = req.body
     if (!(value && correctAnswer && options)) {
-      return res.status(422).json({ error: 'params missing' })
+      return res.status(422).json({ error: 'some params missing' })
+    }
+
+    if (!Array.isArray(options)) {
+      return res.status(401).json({ error: 'options should be of type array' })
+    } else if (options.length === 0) {
+      return res.status(401).json({ error: 'there should be at least one option' })
     }
     const newCorrectAnswer = new CorrectAnswer({ value: correctAnswer })
     await newCorrectAnswer.save()
@@ -55,7 +61,13 @@ questionRouter.post('/compile', async (req, res) => {
   try {
     const { correctAnswer, options } = req.body
     if (!(correctAnswer && options)) {
-      return res.status(422).json({ error: 'params missing' })
+      return res.status(422).json({ error: 'some params missing' })
+    }
+
+    if (!Array.isArray(options)) {
+      return res.status(401).json({ error: 'options should be of type array' })
+    } else if (options.length === 0) {
+      return res.status(401).json({ error: 'there should be at least one option' })
     }
     const newCorrectAnswer = new CorrectAnswer({ value: correctAnswer })
     await newCorrectAnswer.save()
@@ -78,24 +90,28 @@ questionRouter.post('/answer', async (req, res) => {
   try {
     const { id, answer, token } = req.body
     if (!(id && answer)) {
-      return res.status(422).json({ error: 'params missing' })
+      return res.status(422).json({ error: 'some params missing' })
+    }
+
+    if (!token) {
+      return res.status(401).json({ error: 'token missing' })
     }
     const answeredQuestion = await BaseQuestion.findOne({ 'question.item': id }).populate('correctAnswer')
-    const isCorrectAnswer = answer === answeredQuestion.correctAnswer.value
+    const isCorrect = answer === answeredQuestion.correctAnswer.value
 
     const { userId } = jwt.verify(token, process.env.SECRET)
     const user = await User.findById(userId)
     if (!user) {
       return res.status(404).json({ error: 'user not found' })
     }
-    const userAnswer = new Answer({ question: answeredQuestion._id, user: userId, isCorrect: isCorrectAnswer })
+    const userAnswer = new Answer({ question: answeredQuestion._id, user: userId, isCorrect })
     await userAnswer.save()
 
     user.answers = user.answers.concat(userAnswer._id)
     user.questions = user.questions.concat(answeredQuestion._id)
     await user.save()
 
-    res.status(200).json({ isCorrect: isCorrectAnswer })
+    res.status(200).json({ isCorrect, ...(!isCorrect && { correctAnswer: answeredQuestion.correctAnswer.value }) })
   } catch (e) {
     console.error('e', e)
     res.status(500).json({ error: e.message })

@@ -115,6 +115,7 @@ describe('question controller', () => {
         .send({ id: questions[0].question.item._id, answer: 'wrong' })
         .set('Authorization', `bearer ${ token }`)
       expect(response.body.isCorrect).toBe(false)
+      expect(response.body.correctAnswer).toBe('test')
     })
   })
 })

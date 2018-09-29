@@ -17,8 +17,10 @@ userRouter.post('/generate', async (req, res) => {
 userRouter.get('/verifyToken', async (req, res) => {
   try {
     const token = req.body.token
-    const verifiedToken = jwt.verify(token, process.env.SECRET)
-    console.log('verified', verifiedToken)
+    if (!token) {
+      return res.status(401).json({ error: 'token missing' })
+    }
+    jwt.verify(token, process.env.SECRET)
     res.status(200).json({ message: 'Token verified!' })
   } catch (e) {
     console.error(e)
