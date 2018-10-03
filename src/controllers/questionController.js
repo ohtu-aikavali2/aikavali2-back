@@ -1,4 +1,5 @@
 const jwt = require('jsonwebtoken')
+const mongoose = require('mongoose')
 const questionRouter = require('express').Router()
 const BaseQuestion = require('../models/baseQuestion')
 const PrintQuestion = require('../models/printQuestion')
@@ -11,6 +12,54 @@ questionRouter.get('/', async (req, res) => {
   try {
     const baseQuestions = await BaseQuestion.find().populate('question.item').populate('correctAnswer')
     res.status(200).json(baseQuestions)
+  } catch (e) {
+    console.error('e', e)
+    res.status(500).json({ error: e.message })
+  }
+})
+
+questionRouter.delete('/:id', async (req, res) => {
+  try {
+    // Validate id
+    if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
+      return res.status(400).json({ error: 'malformed id' })
+    }
+
+    // Find the target base question
+    const baseQuestion = await BaseQuestion.findById(req.params.id)
+
+    if (!baseQuestion) {
+      return res.status(404).json({ error: 'question not found' })
+    }
+
+    // Remove the question that the base question includes
+    if (baseQuestion.type === 'compile') {
+      await CompileQuestion.findByIdAndRemove(baseQuestion.question.item)
+    } else {
+      await PrintQuestion.findByIdAndRemove(baseQuestion.question.item)
+    }
+
+    // Remove the correct answer that the found question includes
+    await CorrectAnswer.findByIdAndRemove(baseQuestion.correctAnswer)
+
+    // Remove the link between users and the answers that are about to
+    // be deleted. Array.forEach loop can't be used because it doesn't work
+    // as intended with async calls.
+    const answers = await Answer.find({ 'question': req.params.id })
+    for (let i = 0; i < answers.length; i++) {
+      const answer = answers[i]
+      const user = await User.findById(answer.user)
+      user.answers = user.answers.filter((id) => !id.equals(answer._id))
+      await user.save()
+    }
+
+    // Remove all found answer entities
+    await Answer.deleteMany({ 'question': req.params.id })
+
+    // Remove the base question
+    await BaseQuestion.findByIdAndRemove(req.params.id)
+
+    res.status(200).json({ message: 'deleted successfully!' })
   } catch (e) {
     console.error('e', e)
     res.status(500).json({ error: e.message })
@@ -105,7 +154,13 @@ questionRouter.post('/answer', async (req, res) => {
   try {
     // Validate given parameters
     const { id, answer, token } = req.body
-    if (!(id && answer)) {
+
+    // Validate id
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({ error: 'malformed id' })
+    }
+
+    if (!answer) {
       return res.status(422).json({ error: 'some params missing' })
     }
 

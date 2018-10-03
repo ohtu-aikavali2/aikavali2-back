@@ -50,6 +50,7 @@ mongoose
   .catch((e) => {
     console.error(e)
   })
+mongoose.set('useFindAndModify', false)
 
 // CREATE SERVER
 const server = http.createServer(app)
