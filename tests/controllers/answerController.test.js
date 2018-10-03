@@ -10,8 +10,8 @@ describe('answer controller', () => {
 
   beforeEach(async () => {
     // Remove all DB entities
-    await Answer.remove({})
-    await User.remove({})
+    await Answer.deleteMany()
+    await User.deleteMany()
 
     // Generate a user
     const response = await api

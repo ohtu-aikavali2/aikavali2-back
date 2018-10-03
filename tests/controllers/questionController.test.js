@@ -27,12 +27,12 @@ describe('question controller', () => {
 
   beforeEach(async () => {
     // Remove all DB entities
-    await BaseQuestion.remove({})
-    await PrintQuestion.remove({})
-    await CompileQuestion.remove({})
-    await CorrectAnswer.remove({})
-    await Answer.remove({})
-    await User.remove({})
+    await BaseQuestion.deleteMany()
+    await PrintQuestion.deleteMany()
+    await CompileQuestion.deleteMany()
+    await CorrectAnswer.deleteMany()
+    await Answer.deleteMany()
+    await User.deleteMany()
 
     // Create a CorrectAnswer
     const newCorrectAnswer1 = new CorrectAnswer({ value: 'test' })

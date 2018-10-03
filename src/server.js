@@ -43,7 +43,7 @@ app.get('/', (req, res) => res.status(404).send(`This isn't the page you're look
 
 // DATABASE
 mongoose
-  .connect(config.dbUri)
+  .connect(config.dbUri, { useNewUrlParser: true })
   .then(() => {
     console.log('connected to database successfully')
   })
