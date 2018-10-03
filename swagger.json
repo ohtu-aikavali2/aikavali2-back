@@ -19,6 +19,10 @@
     {
       "name": "User",
       "description": "User API"
+    },
+    {
+      "name": "Answer",
+      "description": "Answer API"
     }
   ],
   "schemes": [
@@ -67,6 +71,32 @@
         }
       }
     },
+    "/questions/{id}": {
+      "delete": {
+        "tags": [
+          "Questions"
+        ],
+        "summary": "Deletes a question and all other info that relates to it",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "description": "question's id",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "500": {
+            "description": "ERROR"
+          }
+        }
+      }
+    },
     "/questions/random": {
       "get": {
         "tags": [
@@ -76,6 +106,88 @@
         "responses": {
           "200": {
             "description": "OK"
+          },
+          "500": {
+            "description": "ERROR"
+          }
+        }
+      }
+    },
+    "/questions/print": {
+      "post": {
+        "tags": [
+          "Questions"
+        ],
+        "summary": "Creates a new question of type print",
+        "parameters": [
+          {
+            "in": "body",
+            "name": "value",
+            "description": "value/name of the new question",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "body",
+            "name": "correctAnswer",
+            "description": "correct answer to the question",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "body",
+            "name": "options",
+            "description": "other options that the question has",
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "CREATED QUESTION"
+          },
+          "500": {
+            "description": "ERROR"
+          }
+        }
+      }
+    },
+    "/questions/compile": {
+      "post": {
+        "tags": [
+          "Questions"
+        ],
+        "summary": "Creates a new question of type compile",
+        "parameters": [
+          {
+            "in": "body",
+            "name": "correctAnswer",
+            "description": "correct answer to the question",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "body",
+            "name": "options",
+            "description": "other options that the question has",
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "CREATED QUESTION"
           },
           "500": {
             "description": "ERROR"
@@ -142,6 +254,32 @@
         "responses": {
           "200": {
             "description": "{ isCorrect: true/false }"
+          },
+          "500": {
+            "description": "ERROR"
+          }
+        }
+      }
+    },
+    "/answer/{userId}": {
+      "get": {
+        "tags": [
+          "Answer"
+        ],
+        "summary": "Returns all answers that are linked to a specific user",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "userId",
+            "description": "user's id",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
           },
           "500": {
             "description": "ERROR"
