@@ -7,7 +7,7 @@ const testUrl = `${apiUrl}/user`
 describe('user controller', () => {
   let token
   beforeEach(async () => {
-    await User.remove({})
+    await User.deleteMany()
     const response = await api
       .post(`${testUrl}/generate`)
     token = response.body.token
