@@ -71,6 +71,11 @@ questionRouter.get('/random', async (req, res) => {
     const baseQuestions = await BaseQuestion.find().populate('question.item')
     // Returns a random question from the database
     const baseQuestion = baseQuestions[Math.floor(Math.random() * (baseQuestions.length))]
+    const shuffleArray = arr => arr
+      .map(a => [Math.random(), a])
+      .sort((a, b) => a[0] - b[0])
+      .map(a => a[1])
+    baseQuestion.question.item.options = shuffleArray(baseQuestion.question.item.options)
     res.status(200).json(baseQuestion.question)
   } catch (e) {
     console.error('e', e)
