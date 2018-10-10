@@ -146,6 +146,7 @@ describe('question controller', () => {
     test('GET', async () => {
       const response = await api
         .get(`${testUrl}/random`)
+        .set('Authorization', `bearer ${ token }`)
       expect(response.body.item.options.length).toBe(4)
     })
   })
