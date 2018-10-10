@@ -7,6 +7,8 @@ const CompileQuestion = require('../models/compileQuestion')
 const CorrectAnswer = require('../models/correctAnswer')
 const User = require('../models/user')
 const Answer = require('../models/answer')
+const RepetitionItem = require('../models/repetitionItem')
+const sm = require('../utils/sm')
 
 questionRouter.get('/', async (req, res) => {
   try {
@@ -56,6 +58,9 @@ questionRouter.delete('/:id', async (req, res) => {
     // Remove all found answer entities
     await Answer.deleteMany({ 'question': req.params.id })
 
+    // Remove all repetition items that are linked to the question
+    await RepetitionItem.deleteMany({ 'question': baseQuestion._id })
+
     // Remove the base question
     await BaseQuestion.findByIdAndRemove(req.params.id)
 
@@ -68,15 +73,43 @@ questionRouter.delete('/:id', async (req, res) => {
 
 questionRouter.get('/random', async (req, res) => {
   try {
-    const baseQuestions = await BaseQuestion.find().populate('question.item')
-    // Returns a random question from the database
-    const baseQuestion = baseQuestions[Math.floor(Math.random() * (baseQuestions.length))]
+    const { token } = req.body
+    // Verify user
+    if (!token) {
+      return res.status(401).json({ 'error': 'token missing' })
+    }
+    const { userId } = jwt.verify(token, process.env.SECRET)
+
+    // Get the ids of repetition items that should NOT be asked yet
+    const now = new Date()
+    let repetitionItemIds = await RepetitionItem.find({
+      'user': userId
+    }, 'question').where('nextDate').gt((now.getTime() / 1000))
+
+    repetitionItemIds = repetitionItemIds.map((i) => i.question)
+
+    // Get all questions whose ids
+    // are NOT in the preceding array
+    const baseQuestions = await BaseQuestion.find()
+      .populate('question.item')
+      .where('_id').nin(repetitionItemIds)
+
+    // No such questions left
+    if (baseQuestions.length === 0) {
+      return res.status(200).json({ message: 'No questions left for now! :(' })
+    }
+
+    // Select a random question from the received questions
+    const randQuestion = baseQuestions[Math.floor(Math.random() * (baseQuestions.length))]
+
+    // Shuffle the random question's options so they will
+    // always have a random ordering
     const shuffleArray = arr => arr
       .map(a => [Math.random(), a])
       .sort((a, b) => a[0] - b[0])
       .map(a => a[1])
-    baseQuestion.question.item.options = shuffleArray(baseQuestion.question.item.options)
-    res.status(200).json(baseQuestion.question)
+    randQuestion.question.item.options = shuffleArray(randQuestion.question.item.options)
+    res.status(200).json(randQuestion.question)
   } catch (e) {
     console.error('e', e)
     res.status(500).json({ error: e.message })
@@ -157,10 +190,9 @@ questionRouter.post('/compile', async (req, res) => {
 
 questionRouter.post('/answer', async (req, res) => {
   try {
-    // Validate given parameters
     const { id, answer, token } = req.body
 
-    // Validate id
+    // Validate id and given parameters
     if (!mongoose.Types.ObjectId.isValid(id)) {
       return res.status(400).json({ error: 'malformed id' })
     }
@@ -189,6 +221,28 @@ questionRouter.post('/answer', async (req, res) => {
     // Create a new Answer entity and save it
     const userAnswer = new Answer({ question: answeredQuestion._id, user: userId, isCorrect })
     await userAnswer.save()
+
+    // Check if user has a repetition item (= user has answered this question before)
+    const foundRepetitionItem = await RepetitionItem.findOne({ 'user': userId, 'question': answeredQuestion._id })
+
+    // Set answer quality = 'how difficult the question was'
+    // Currently users can't rate questions, so we need to use either 1 for false or 5 for correct
+    const answerQuality = isCorrect ? 5 : 1
+
+    if (foundRepetitionItem) {
+      // If user has answered the question before, we need to update
+      // its parameters, like when to review the question next time
+      const params = sm.getUpdatedParams(foundRepetitionItem, answerQuality)
+      await RepetitionItem.findOneAndUpdate(
+        { 'user': userId, 'question': answeredQuestion._id },
+        params
+      )
+    } else {
+      // If this is the first time when user answers this question, then
+      // we need to create a new repetition item entity
+      const newRepetitionItem = new RepetitionItem(sm.createRepetitionItem(answerQuality, userId, answeredQuestion._id))
+      await newRepetitionItem.save()
+    }
 
     // Link the answer to the User entity and save it
     user.answers = user.answers.concat(userAnswer._id)
