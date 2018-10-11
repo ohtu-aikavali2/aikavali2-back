@@ -218,16 +218,16 @@ questionRouter.post('/answer', async (req, res) => {
     let isCorrect, answerQuality
 
     // Check if the question skipped -> answer is false and quality is 0
-    if (answer.value === "Note: questionSkipped") {
-        isCorrect = false
-        answerQuality = 0
+    if (answer.value === 'Note: questionSkipped') {
+      isCorrect = false
+      answerQuality = 0
     } else {
-        // Check if the received answer is correct
-        isCorrect = answer === answeredQuestion.correctAnswer.value
+      // Check if the received answer is correct
+      isCorrect = answer === answeredQuestion.correctAnswer.value
 
-        // Set answer quality = 'how difficult the question was'
-        // Currently users can't rate questions, so we need to use either 1 for false or 5 for correct
-        answerQuality = isCorrect ? 5 : 1
+      // Set answer quality = 'how difficult the question was'
+      // Currently users can't rate questions, so we need to use either 1 for false or 5 for correct
+      answerQuality = isCorrect ? 5 : 1
     }
 
     // Create a new Answer entity and save it
