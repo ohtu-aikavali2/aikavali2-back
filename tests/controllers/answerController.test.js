@@ -27,14 +27,8 @@ describe('answer controller', () => {
 
   describe(`${apiUrl}/:userId`, () => {
     test('GET', async () => {
-      // Validation
-      let response = await api
-        .get(`${testUrl}/123`)
-      expect(response.status).toBe(400)
-      expect(response.body.error).toBe('malformed id')
-
       // Check that all answers are returned
-      response = await api
+      const response = await api
         .get(`${testUrl}/${user.id}`)
       expect(response.status).toBe(200)
       expect(response.body.length).toBe(2)
