@@ -74,11 +74,20 @@ questionRouter.delete('/:id', async (req, res) => {
 questionRouter.get('/random', async (req, res) => {
   try {
     const { token } = req.body
+
     // Verify user
     if (!token) {
       return res.status(401).json({ 'error': 'token missing' })
     }
     const { userId } = jwt.verify(token, process.env.SECRET)
+
+    // Used for dev purposes
+    const { force } = req.query
+    if (force) {
+      const baseQuestions = await BaseQuestion.find().populate('question.item')
+      const baseQuestion = baseQuestions[Math.floor(Math.random() * (baseQuestions.length))]
+      return res.status(200).json(baseQuestion.question)
+    }
 
     // Get the ids of repetition items that should NOT be asked yet
     const now = new Date()

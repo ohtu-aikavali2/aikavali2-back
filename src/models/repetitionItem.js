@@ -4,7 +4,7 @@ const repetitionItemSchema = new mongoose.Schema({
   nextDate: mongoose.Schema.Types.Number,
   easinessFactor: mongoose.Schema.Types.Number,
   interval: mongoose.Schema.Types.Number,
-  user: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+  user: { type: mongoose.Schema.Types.Number, ref: 'User' },
   question: { type: mongoose.Schema.Types.ObjectId, ref: 'BaseQuestion' }
 })
 
