@@ -80,6 +80,7 @@ describe('question controller', () => {
 
   describe(`${testUrl}/:id`, () => {
     test('DELETE', async () => {
+      jest.setTimeout(10000)
       // Get initial questions
       const preQuestions = await BaseQuestion.find({})
       expect(preQuestions.length).toBe(2)
