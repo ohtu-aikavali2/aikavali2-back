@@ -13,6 +13,16 @@ describe('user controller', () => {
     token = response.body.token
   })
 
+  describe(`${testUrl}/login`, () => {
+    test('POST', async () => {
+      const user = { accessToken: '123' }
+      const response = await api
+        .post(`${testUrl}/login`)
+        .send({ user })
+      expect(response.body.error).toBeDefined()
+    })
+  })
+
   describe(`${testUrl}/generate`, () => {
     test('POST', async () => {
       const response = await api
@@ -27,6 +37,10 @@ describe('user controller', () => {
         .get(`${testUrl}/verifyToken`)
         .set('Authorization', `bearer ${ token }`)
       expect(response.body.message).toBe('Token verified!')
+
+      response = await api
+        .get(`${testUrl}/verifyToken`)
+      expect(response.body.error).toBe('token missing')
 
       response = await api
         .get(`${testUrl}/verifyToken`)

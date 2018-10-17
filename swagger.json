@@ -103,6 +103,16 @@
           "Questions"
         ],
         "summary": "Returns a random question",
+        "parameters": [
+          {
+            "in": "body",
+            "name": "token",
+            "description": "user token",
+            "schema": {
+              "type": "object"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "description": "OK"
@@ -188,6 +198,32 @@
         "responses": {
           "201": {
             "description": "CREATED QUESTION"
+          },
+          "500": {
+            "description": "ERROR"
+          }
+        }
+      }
+    },
+    "/user/login": {
+      "post": {
+        "tags": [
+          "User"
+        ],
+        "summary": "Returns a jsonwebtoken",
+        "parameters": [
+          {
+            "in": "body",
+            "name": "user",
+            "description": "an object with accessToken parameter",
+            "schema": {
+              "type": "object"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
           },
           "500": {
             "description": "ERROR"

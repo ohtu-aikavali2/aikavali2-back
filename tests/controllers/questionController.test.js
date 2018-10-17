@@ -7,6 +7,7 @@ const CompileQuestion = require('../../src/models/compileQuestion')
 const CorrectAnswer = require('../../src/models/correctAnswer')
 const Answer = require('../../src/models/answer')
 const User = require('../../src/models/user')
+const RepetitionItem = require('../../src/models/repetitionItem')
 const testUrl = `${apiUrl}/questions`
 
 // A helper function to get specific type of
@@ -33,6 +34,7 @@ describe('question controller', () => {
     await CorrectAnswer.deleteMany()
     await Answer.deleteMany()
     await User.deleteMany()
+    await RepetitionItem.deleteMany()
 
     // Create a CorrectAnswer
     const newCorrectAnswer1 = new CorrectAnswer({ value: 'test' })
@@ -145,7 +147,13 @@ describe('question controller', () => {
 
   describe(`${testUrl}/random`, () => {
     test('GET', async () => {
-      const response = await api
+      // Check validation
+      let response = await api
+        .get(`${testUrl}/random`)
+      expect(response.body.error).toBeDefined()
+
+      // Check that question is received
+      response = await api
         .get(`${testUrl}/random`)
         .set('Authorization', `bearer ${ token }`)
       expect(response.body.item.options.length).toBe(4)
@@ -154,35 +162,49 @@ describe('question controller', () => {
 
   describe(`${testUrl}/print`, () => {
     test('POST', async () => {
+      // Validation
+      let response = await api
+        .post(`${testUrl}/print`)
+        .send({ value: '?', correctAnswer: 'a', options: 'WRONG!' })
+      expect(response.body.error).toBeDefined()
+
+      response = await api
+        .post(`${testUrl}/print`)
+        .send({})
+      expect(response.status).toBe(422)
+      expect(response.body.error).toBeDefined()
+
+      // Creating a new print question
       const originalPrintQuestions = await getQuestionsOfType('print')
       await api
         .post(`${testUrl}/print`)
         .send({ value: '?', correctAnswer: 'a', options: ['b', 'c', 'd'] })
       const updatedPrintQuestions = await getQuestionsOfType('print')
       expect(updatedPrintQuestions.length).toBe(originalPrintQuestions.length + 1)
-
-      const response = await api
-        .post(`${testUrl}/print`)
-        .send({})
-      expect(response.status).toBe(422)
-      expect(response.body.error).toBeTruthy()
     })
   })
 
   describe(`${testUrl}/compile`, () => {
     test('POST', async () => {
+      // Validation
+      let response = await api
+        .post(`${testUrl}/compile`)
+        .send({ correctAnswer: 'a', options: 'WRONG!' })
+      expect(response.body.error).toBeDefined()
+
+      response = await api
+        .post(`${testUrl}/compile`)
+        .send({})
+      expect(response.status).toBe(422)
+      expect(response.body.error).toBeDefined()
+
+      // Create question
       const originalCompileQuestions = await getQuestionsOfType('compile')
       await api
         .post(`${testUrl}/compile`)
         .send({ correctAnswer: 'a', options: ['b', 'c', 'd'] })
       const updatedCompileQuestions = await getQuestionsOfType('compile')
       expect(updatedCompileQuestions.length).toBe(originalCompileQuestions.length + 1)
-
-      const response = await api
-        .post(`${testUrl}/compile`)
-        .send({})
-      expect(response.status).toBe(422)
-      expect(response.body.error).toBeTruthy()
     })
   })
 
@@ -209,7 +231,7 @@ describe('question controller', () => {
         .post(`${testUrl}/answer`)
         .send({ id: questions[0].question.item._id, answer: 'test' })
       expect(response.status).toBe(401)
-      expect(response.body.error).toBe('token missing')
+      expect(response.body.error).toBeDefined()
 
       // Check for correct answer
       response = await api
@@ -233,6 +255,21 @@ describe('question controller', () => {
       // Check that user has been linked to their answers
       const user = await User.findOne()
       expect(user.answers.length).toBe(2)
+
+
+      // Check taht skipping questions works as intended
+      response = await api
+        .post(`${testUrl}/answer`)
+        .send({ id: questions[1].question.item._id, answer: 'Note: questionSkipped' })
+        .set('Authorization', `bearer ${ token }`)
+      const repetitionItem = await RepetitionItem.findOne({ 'user': user._id, 'question': questions[1]._id })
+      expect(repetitionItem.easinessFactor).toBe(1.7000000000000002)
+
+      // Check no more questions left
+      response = await api
+        .get(`${testUrl}/random`)
+        .set('Authorization', `bearer ${ token }`)
+      expect(response.body.message).toBeDefined()
     })
   })
 })
