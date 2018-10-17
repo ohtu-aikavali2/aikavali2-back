@@ -105,7 +105,7 @@ questionRouter.get('/random', async (req, res) => {
 
     // No such questions left
     if (baseQuestions.length === 0) {
-      return res.status(200).json({ message: 'No questions left for now! :(' })
+      return res.status(200).json({ message: 'No more questions left at the moment!' })
     }
 
     // Select a random question from the received questions
@@ -227,7 +227,7 @@ questionRouter.post('/answer', async (req, res) => {
     let isCorrect, answerQuality
 
     // Check if the question skipped -> answer is false and quality is 0
-    if (answer.value === 'Note: questionSkipped') {
+    if (answer === 'Note: questionSkipped') {
       isCorrect = false
       answerQuality = 0
     } else {
