@@ -105,7 +105,7 @@ questionRouter.get('/random', async (req, res) => {
 
     // No such questions left
     if (baseQuestions.length === 0) {
-      return res.status(200).json({ message: 'No more questions left at the moment!' })
+      return res.status(200).json({ message: 'Ei enempää kysymyksiä tällä hetkellä!' })
     }
 
     // Select a random question from the received questions
