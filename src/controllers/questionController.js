@@ -51,6 +51,9 @@ questionRouter.delete('/:id', async (req, res) => {
     for (let i = 0; i < answers.length; i++) {
       const answer = answers[i]
       const user = await User.findById(answer.user)
+      if (!user) {
+        continue
+      }
       user.answers = user.answers.filter((id) => !id.equals(answer._id))
       await user.save()
     }
