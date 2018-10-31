@@ -202,7 +202,7 @@ questionRouter.post('/compile', async (req, res) => {
 
 questionRouter.post('/answer', async (req, res) => {
   try {
-    const { id, answer, token } = req.body
+    const { id, answer, token, time } = req.body
 
     // Validate id and given parameters
     if (!mongoose.Types.ObjectId.isValid(id)) {
@@ -242,10 +242,6 @@ questionRouter.post('/answer', async (req, res) => {
       answerQuality = isCorrect ? 5 : 1
     }
 
-    // Create a new Answer entity and save it
-    const userAnswer = new Answer({ question: answeredQuestion._id, user: userId, isCorrect })
-    await userAnswer.save()
-
     // Check if user has a repetition item (= user has answered this question before)
     const foundRepetitionItem = await RepetitionItem.findOne({ 'user': userId, 'question': answeredQuestion._id })
 
@@ -263,6 +259,10 @@ questionRouter.post('/answer', async (req, res) => {
       const newRepetitionItem = new RepetitionItem(sm.createRepetitionItem(answerQuality, userId, answeredQuestion._id))
       await newRepetitionItem.save()
     }
+
+    // Create a new Answer entity and save it
+    const userAnswer = new Answer({ question: answeredQuestion._id, user: userId, isCorrect, time })
+    await userAnswer.save()
 
     // Link the answer to the User entity and save it
     user.answers = user.answers.concat(userAnswer._id)
