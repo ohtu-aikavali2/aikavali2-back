@@ -14,6 +14,8 @@ let dbUri = process.env.DB_URI_DEV
 if (process.env.NODE_ENV === 'test') {
   port = process.env.TEST_PORT
   dbUri = process.env.DB_URI_TEST
+} else if (isProduction) {
+  dbUri = process.env.DB_URI
 }
 
 module.exports = {

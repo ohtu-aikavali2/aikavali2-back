@@ -6,7 +6,6 @@ const User = require('../models/user')
 userRouter.post('/login', async (req, res) => {
   try {
     const { user } = req.body
-
     // Validate auth in tmc server. Server returns
     // some data regarding the user.
     const authUrl = 'https://tmc.mooc.fi/api/v8/users/current'
@@ -20,14 +19,21 @@ userRouter.post('/login', async (req, res) => {
     if (!foundUser) {
       // If this is the first login for this specific user, create
       // a new user entity
-      foundUser = new User({ answers: [], _id: data.id, administrator: data.administrator, username: data.username })
+      const admins = process.env.ADMIN_EMAILS.split(' ')
+      const isAdmin = data.administrator || admins.includes(data.email)
+      foundUser = new User({ answers: [], _id: data.id, administrator: isAdmin, username: data.username })
       await foundUser.save()
     }
 
     // Create token
-    const token = jwt.sign({ userId: foundUser._id }, process.env.SECRET)
+    const token = jwt.sign({ userId: foundUser._id, administrator: foundUser.administrator }, process.env.SECRET)
 
-    res.status(200).json({ id: foundUser._id, username: foundUser.username, token })
+    return res.status(200).json({
+      id: foundUser._id,
+      username: foundUser.username,
+      administrator: foundUser.administrator,
+      token
+    })
   } catch (e) {
     console.error(e)
     res.status(500).json({ error: 'Login error' })
