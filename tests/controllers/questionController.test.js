@@ -8,6 +8,7 @@ const CorrectAnswer = require('../../src/models/correctAnswer')
 const Answer = require('../../src/models/answer')
 const User = require('../../src/models/user')
 const RepetitionItem = require('../../src/models/repetitionItem')
+const Group = require('../../src/models/group')
 const testUrl = `${apiUrl}/questions`
 
 // A helper function to get specific type of
@@ -35,6 +36,7 @@ describe('question controller', () => {
     await Answer.deleteMany()
     await User.deleteMany()
     await RepetitionItem.deleteMany()
+    await Group.deleteMany()
 
     // Create a CorrectAnswer
     const newCorrectAnswer1 = new CorrectAnswer({ value: 'test' })
@@ -160,53 +162,48 @@ describe('question controller', () => {
     })
   })
 
-  describe(`${testUrl}/print`, () => {
+  describe(`${testUrl}`, () => {
     test('POST', async () => {
-      // Validation
+      const testGroup = new Group({ name: 'test' })
+      await testGroup.save()
       let response = await api
-        .post(`${testUrl}/print`)
-        .send({ value: '?', correctAnswer: 'a', options: 'WRONG!' })
+        .post(`${testUrl}`)
+        .send({ value: '?', correctAnswer: 'a', options: 'WRONG!', type: 'print' })
       expect(response.body.error).toBeDefined()
 
       response = await api
-        .post(`${testUrl}/print`)
+        .post(`${testUrl}`)
         .send({})
       expect(response.status).toBe(422)
       expect(response.body.error).toBeDefined()
 
-      // Creating a new print question
       const originalPrintQuestions = await getQuestionsOfType('print')
       await api
-        .post(`${testUrl}/print`)
-        .send({ value: '?', correctAnswer: 'a', options: ['b', 'c', 'd'] })
+        .post(`${testUrl}`)
+        .send({ value: '?', correctAnswer: 'a', options: ['b', 'c', 'd'], groupId: testGroup._id, type: 'print' })
       const updatedPrintQuestions = await getQuestionsOfType('print')
       expect(updatedPrintQuestions.length).toBe(originalPrintQuestions.length + 1)
-    })
-  })
 
-  describe(`${testUrl}/compile`, () => {
-    test('POST', async () => {
-      // Validation
-      let response = await api
-        .post(`${testUrl}/compile`)
+      response = await api
+        .post(`${testUrl}`)
         .send({ correctAnswer: 'a', options: 'WRONG!' })
       expect(response.body.error).toBeDefined()
 
       response = await api
-        .post(`${testUrl}/compile`)
+        .post(`${testUrl}`)
         .send({})
       expect(response.status).toBe(422)
       expect(response.body.error).toBeDefined()
 
-      // Create question
       const originalCompileQuestions = await getQuestionsOfType('compile')
       await api
-        .post(`${testUrl}/compile`)
-        .send({ correctAnswer: 'a', options: ['b', 'c', 'd'] })
+        .post(`${testUrl}`)
+        .send({ correctAnswer: 'a', options: ['b', 'c', 'd'], groupId: testGroup._id, type: 'compile' })
       const updatedCompileQuestions = await getQuestionsOfType('compile')
       expect(updatedCompileQuestions.length).toBe(originalCompileQuestions.length + 1)
     })
   })
+
 
   describe(`${testUrl}/answer`, () => {
     test('POST', async () => {
