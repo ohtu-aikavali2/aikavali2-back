@@ -11,10 +11,10 @@ courseRouter.get('/', async (req, res) => {
   }
 })
 
-courseRouter.get('/:id', async (req, res) => {
+courseRouter.get('/:name', async (req, res) => {
   try {
-    const { id } = req.params
-    const course = await Course.findById(id).populate('groups')
+    const { name } = req.params
+    const course = await Course.find({ name }).populate('groups')
     if (!course) {
       return res.status(404).json({ error: 'group not found' })
     }

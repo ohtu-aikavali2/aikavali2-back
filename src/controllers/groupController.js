@@ -22,7 +22,7 @@ groupRouter.post('/', async (req, res) => {
     if (!course) {
       return res.status(404).json({ error: 'course not found' })
     }
-    const newGroup = new Group({ name })
+    const newGroup = new Group({ name, course: course._id })
     await newGroup.save()
     course.groups = course.groups.concat(newGroup._id)
     await course.save()

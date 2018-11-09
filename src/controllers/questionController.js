@@ -83,7 +83,7 @@ questionRouter.delete('/:id', async (req, res) => {
 questionRouter.get('/random', async (req, res) => {
   try {
     const { token } = req.body
-    const { groupId } = req.query
+    const { groupId, course } = req.query
 
     // Verify user
     if (!token) {
@@ -118,14 +118,26 @@ questionRouter.get('/random', async (req, res) => {
 
     // Get all questions whose ids
     // are NOT in the preceding array
-    const baseQuestions = await BaseQuestion.find()
+    let baseQuestions = await BaseQuestion.find()
       .populate('question.item')
+      .populate({ path: 'group', populate: { path: 'course', model: 'Course' }, model: 'Group' })
       .and([
         { '_id': { $nin: repetitionItemIds } },
         // If group is set, then get questions
         // from that specific group
         { ...(group && { 'group': { $eq: groupId } }) }
       ])
+
+    // If course is set, then get questions
+    // from that specific course
+    if (course) {
+      baseQuestions = baseQuestions.filter((question) => {
+        if (question.group && question.group.course) {
+          return question.group.course.name === course
+        }
+        return false
+      })
+    }
 
     // No such questions left
     if (baseQuestions.length === 0) {
