@@ -8,6 +8,8 @@ const CorrectAnswer = require('../models/correctAnswer')
 const User = require('../models/user')
 const Answer = require('../models/answer')
 const RepetitionItem = require('../models/repetitionItem')
+const Group = require('../models/group')
+const QuestionReview = require('../models/questionReview.js')
 const sm = require('../utils/sm')
 
 questionRouter.get('/', async (req, res) => {
@@ -22,13 +24,14 @@ questionRouter.get('/', async (req, res) => {
 
 questionRouter.delete('/:id', async (req, res) => {
   try {
+    const { id } = req.params
     // Validate id
-    if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
+    if (!mongoose.Types.ObjectId.isValid(id)) {
       return res.status(400).json({ error: 'malformed id' })
     }
 
     // Find the target base question
-    const baseQuestion = await BaseQuestion.findById(req.params.id)
+    const baseQuestion = await BaseQuestion.findById(id)
 
     if (!baseQuestion) {
       return res.status(404).json({ error: 'question not found' })
@@ -47,7 +50,7 @@ questionRouter.delete('/:id', async (req, res) => {
     // Remove the link between users and the answers that are about to
     // be deleted. Array.forEach loop can't be used because it doesn't work
     // as intended with async calls.
-    const answers = await Answer.find({ 'question': req.params.id })
+    const answers = await Answer.find({ 'question': id })
     for (let i = 0; i < answers.length; i++) {
       const answer = answers[i]
       const user = await User.findById(answer.user)
@@ -58,14 +61,17 @@ questionRouter.delete('/:id', async (req, res) => {
       await user.save()
     }
 
+    // Remove all found question reviews
+    await QuestionReview.deleteMany({ 'question': baseQuestion.question.item })
+
     // Remove all found answer entities
-    await Answer.deleteMany({ 'question': req.params.id })
+    await Answer.deleteMany({ 'question': id })
 
     // Remove all repetition items that are linked to the question
-    await RepetitionItem.deleteMany({ 'question': baseQuestion._id })
+    await RepetitionItem.deleteMany({ 'question': id })
 
     // Remove the base question
-    await BaseQuestion.findByIdAndRemove(req.params.id)
+    await BaseQuestion.findByIdAndRemove(id)
 
     res.status(200).json({ message: 'deleted successfully!' })
   } catch (e) {
@@ -77,12 +83,22 @@ questionRouter.delete('/:id', async (req, res) => {
 questionRouter.get('/random', async (req, res) => {
   try {
     const { token } = req.body
+    const { groupId, course } = req.query
 
     // Verify user
     if (!token) {
-      return res.status(401).json({ 'error': 'token missing' })
+      return res.status(401).json({ error: 'token missing' })
     }
     const { userId } = jwt.verify(token, process.env.SECRET)
+
+    // Verify group if one is given
+    let group = null
+    if (groupId) {
+      group = await Group.findById(groupId)
+      if (!group) {
+        return res.status(400).json({ error: 'group not found' })
+      }
+    }
 
     // Used for dev purposes
     const { force } = req.query
@@ -102,9 +118,26 @@ questionRouter.get('/random', async (req, res) => {
 
     // Get all questions whose ids
     // are NOT in the preceding array
-    const baseQuestions = await BaseQuestion.find()
+    let baseQuestions = await BaseQuestion.find()
       .populate('question.item')
-      .where('_id').nin(repetitionItemIds)
+      .populate({ path: 'group', populate: { path: 'course', model: 'Course' }, model: 'Group' })
+      .and([
+        { '_id': { $nin: repetitionItemIds } },
+        // If group is set, then get questions
+        // from that specific group
+        { ...(group && { 'group': { $eq: groupId } }) }
+      ])
+
+    // If course is set, then get questions
+    // from that specific course
+    if (course) {
+      baseQuestions = baseQuestions.filter((question) => {
+        if (question.group && question.group.course) {
+          return question.group.course.name === course
+        }
+        return false
+      })
+    }
 
     // No such questions left
     if (baseQuestions.length === 0) {
@@ -128,11 +161,18 @@ questionRouter.get('/random', async (req, res) => {
   }
 })
 
-questionRouter.post('/print', async (req, res) => {
+questionRouter.post('/', async (req, res) => {
   try {
-    // Validate given parameters
-    const { value, correctAnswer, options } = req.body
-    if (!(value && correctAnswer && options)) {
+    const {
+      value,
+      correctAnswer,
+      options,
+      type,
+      groupId
+    } = req.body
+
+    // Validate parameters
+    if (!(correctAnswer && options && groupId)) {
       return res.status(422).json({ error: 'some params missing' })
     }
 
@@ -142,58 +182,42 @@ questionRouter.post('/print', async (req, res) => {
       return res.status(401).json({ error: 'there should be at least one option' })
     }
 
-    // Create a new CorrectAnswer entity and save it
-    const newCorrectAnswer = new CorrectAnswer({ value: correctAnswer })
-    await newCorrectAnswer.save()
-
-    // Create a new PrintQuestion entity and save it
-    const newPrintQuestion = new PrintQuestion({ value, options: options.concat(correctAnswer) })
-    await newPrintQuestion.save()
-
-    // Create a new BaseQuestion entity with type 'print' and save it
-    const newBaseQuestion = new BaseQuestion({
-      type: 'print',
-      question: { kind: 'PrintQuestion', item: newPrintQuestion._id },
-      correctAnswer: newCorrectAnswer._id
-    })
-    const result = await newBaseQuestion.save()
-    res.status(201).json(result)
-  } catch (e) {
-    console.error('e', e)
-    res.status(500).json({ error: e.message })
-  }
-})
-
-questionRouter.post('/compile', async (req, res) => {
-  try {
-    // Validate given parameters
-    const { correctAnswer, options } = req.body
-    if (!(correctAnswer && options)) {
-      return res.status(422).json({ error: 'some params missing' })
-    }
-
-    if (!Array.isArray(options)) {
-      return res.status(401).json({ error: 'options should be of type array' })
-    } else if (options.length === 0) {
-      return res.status(401).json({ error: 'there should be at least one option' })
+    // Find and validate the given group
+    const group = await Group.findById(groupId)
+    if (!group) {
+      return res.status(400).json({ error: 'group not found' })
     }
 
     // Create a new CorrectAnswer entity and save it
     const newCorrectAnswer = new CorrectAnswer({ value: correctAnswer })
     await newCorrectAnswer.save()
 
-    // Create a new CompileQuestion entity and save it
-    const newCompileQuestion = new CompileQuestion({ options: options.concat(correctAnswer) })
-    await newCompileQuestion.save()
+    // Create a new question entity and save it
+    let newQuestion, kind
+    if (type === 'print') {
+      kind = 'PrintQuestion'
+      newQuestion = new PrintQuestion({ value, options: options.concat(correctAnswer) })
+      await newQuestion.save()
+    } else if (type === 'compile') {
+      kind = 'CompileQuestion'
+      newQuestion = new CompileQuestion({ options: options.concat(correctAnswer) })
+      await newQuestion.save()
+    }
 
-    // Create a new BaseQuestion entity with type 'compile' and save it
+    // Create a new BaseQuestion entity and save it
     const newBaseQuestion = new BaseQuestion({
-      type: 'compile',
-      question: { kind: 'CompileQuestion', item: newCompileQuestion._id },
-      correctAnswer: newCorrectAnswer._id
+      type,
+      question: { kind, item: newQuestion._id },
+      correctAnswer: newCorrectAnswer._id,
+      group: group._id
     })
-    const result = await newBaseQuestion.save()
-    res.status(201).json(result)
+    await newBaseQuestion.save()
+
+    // Update the group
+    group.baseQuestions = group.baseQuestions.concat(newBaseQuestion._id)
+    await group.save()
+
+    res.status(201).json(newBaseQuestion)
   } catch (e) {
     console.error('e', e)
     res.status(500).json({ error: e.message })

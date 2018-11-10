@@ -25,14 +25,14 @@ questionReviewRouter.post('/', async (req, res) => {
       return res.status(404).json({ error: 'user not found' })
     }
 
-    const relatedQuestion = await await BaseQuestion.findOne({ 'question.item': questionId }).populate('correctAnswer')
+    const relatedQuestion = await BaseQuestion.findOne({ 'question.item': questionId }).populate('correctAnswer')
     if (!relatedQuestion) {
-      return res.status(404).json({ error:' basequestion not found' })
+      return res.status(404).json({ error: 'basequestion not found' })
     }
     const questionReview = new QuestionReview({ question:questionId, review:review })
     await questionReview.save()
 
-    res.status(200)
+    return res.status(200).json({ message: 'Review submitted successfully' })
   } catch (e) {
     console.error('e', e)
     res.status(500).json({ error: e.message })

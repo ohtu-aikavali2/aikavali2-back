@@ -30,16 +30,18 @@ app.use((req, res, next) => {
 
 // CONTROLLERS
 const apiUrl = '/api/v1'
-const exampleController = require('./controllers/example')
 const questionController = require('./controllers/questionController')
 const userController = require('./controllers/userController')
 const answerController = require('./controllers/answerController')
 const questionReviewController = require('./controllers/questionReviewController.js')
-app.use(`${apiUrl}/example`, exampleController)
+const courseController = require('./controllers/courseController')
+const groupController = require('./controllers/groupController')
 app.use(`${apiUrl}/questions`, questionController)
 app.use(`${apiUrl}/user`, userController)
 app.use(`${apiUrl}/answer`, answerController)
 app.use(`${apiUrl}/questions/review`, questionReviewController)
+app.use(`${apiUrl}/courses`, courseController)
+app.use(`${apiUrl}/groups`, groupController)
 app.use(`${apiUrl}`, swagger.serve, swagger.setup(config.swaggerDoc))
 app.get('/', (req, res) => res.status(404).send(`This isn't the page you're looking for! Please go to <a href=${apiUrl}>${apiUrl}</a>`))
 
