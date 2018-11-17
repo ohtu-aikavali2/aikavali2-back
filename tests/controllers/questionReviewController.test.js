@@ -17,6 +17,7 @@ describe('question review controller', () => {
     await QuestionReview.deleteMany()
     await User.deleteMany()
     await PrintQuestion.deleteMany()
+    await BaseQuestion.deleteMany()
 
     // Generate a token
     const response = await api
