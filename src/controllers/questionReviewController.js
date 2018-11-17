@@ -29,10 +29,10 @@ questionReviewRouter.post('/', async (req, res) => {
     if (!relatedQuestion) {
       return res.status(404).json({ error: 'basequestion not found' })
     }
-    const questionReview = new QuestionReview({ question:questionId, review:review })
+    const questionReview = new QuestionReview({ question: questionId, review:review })
     await questionReview.save()
 
-    return res.status(200).json({ message: 'Review submitted successfully' })
+    return res.status(201).json({ message: 'Review submitted successfully' })
   } catch (e) {
     console.error('e', e)
     res.status(500).json({ error: e.message })

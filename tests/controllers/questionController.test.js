@@ -120,7 +120,7 @@ describe('question controller', () => {
       const printQuestions = await getQuestionsOfType('print')
       expect(printQuestions.length).toBe(0)
 
-      // Check that all answers relating to the the
+      // Check that all answers relating to the
       // removed question have been deleted
       const postAnswers = await Answer.find()
       expect(postAnswers.length).toBe(1)
