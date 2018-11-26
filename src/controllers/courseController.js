@@ -3,7 +3,7 @@ const Course = require('../models/course')
 
 courseRouter.get('/', async (req, res) => {
   try {
-    const courses = await Course.find()
+    const courses = await Course.find().populate('groups')
     res.status(200).json(courses)
   } catch (e) {
     console.error(e)
