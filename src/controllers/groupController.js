@@ -1,3 +1,4 @@
+const mongoose = require('mongoose')
 const groupRouter = require('express').Router()
 const Group = require('../models/group')
 const Course = require('../models/course')
@@ -18,6 +19,11 @@ groupRouter.post('/', async (req, res) => {
     if (!(name && courseId)) {
       return res.status(422).json({ error: 'some params missing' })
     }
+
+    if (!mongoose.Types.ObjectId.isValid(courseId)) {
+      return res.status(400).json({ error: 'malformed course id' })
+    }
+
     const course = await Course.findById(courseId)
     if (!course) {
       return res.status(404).json({ error: 'course not found' })

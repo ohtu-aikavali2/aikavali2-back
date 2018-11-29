@@ -26,6 +26,7 @@ describe('question controller', () => {
   // We need to store the token so all
   // tests can use it if needed
   let token
+  let testGroup
 
   beforeEach(async () => {
     // Remove all DB entities
@@ -38,6 +39,10 @@ describe('question controller', () => {
     await RepetitionItem.deleteMany()
     await Group.deleteMany()
 
+    // Create a group
+    testGroup = new Group({ name: 'test' })
+    await testGroup.save()
+
     // Create a CorrectAnswer
     const newCorrectAnswer1 = new CorrectAnswer({ value: 'test' })
     await newCorrectAnswer1.save()
@@ -48,7 +53,7 @@ describe('question controller', () => {
 
     // Create a PrintQuestion
     const options = ['a', 'b', 'c']
-    const newPrintQuestion = new PrintQuestion({ value: 'test', options: options.concat('test') })
+    const newPrintQuestion = new PrintQuestion({ value: 'test', options: options.concat('test'), type: 'print', groupId: testGroup._id })
     await newPrintQuestion.save()
     const q1 = new BaseQuestion({
       type: 'print',
@@ -62,7 +67,7 @@ describe('question controller', () => {
     await newCompileQuestion.save()
     const q2 = new BaseQuestion({
       type: 'compile',
-      question: { kind: 'CompileQuestion', item: newCompileQuestion._id },
+      question: { kind: 'CompileQuestion', item: newCompileQuestion._id, type: 'compile', groupId: testGroup._id },
       correctAnswer: newCorrectAnswer2._id
     })
     await q2.save()
@@ -115,7 +120,7 @@ describe('question controller', () => {
       const printQuestions = await getQuestionsOfType('print')
       expect(printQuestions.length).toBe(0)
 
-      // Check that all answers relating to the the
+      // Check that all answers relating to the
       // removed question have been deleted
       const postAnswers = await Answer.find()
       expect(postAnswers.length).toBe(1)
@@ -164,8 +169,6 @@ describe('question controller', () => {
 
   describe(`${testUrl}`, () => {
     test('POST', async () => {
-      const testGroup = new Group({ name: 'test' })
-      await testGroup.save()
       let response = await api
         .post(`${testUrl}`)
         .send({ value: '?', correctAnswer: 'a', options: 'WRONG!', type: 'print' })
