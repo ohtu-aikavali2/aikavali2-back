@@ -7,9 +7,7 @@ const QuestionReview = require('../models/questionReview.js')
 
 questionReviewRouter.post('/', async (req, res) => {
   try {
-    console.log('Lisäämässä uutta revieta')
     const { review, questionId, token } = req.body
-    console.log('review: ' + review + ', questionId: ' + questionId + ', token: ' + token)
     // see if params are missing
     if (!(review && questionId && token)) {
       return res.status(422).json({ error: 'Some params missing' })
@@ -41,7 +39,7 @@ questionReviewRouter.post('/', async (req, res) => {
     question.reviewSum = sum
     question.averageRating = sum / reviews.length
     await question.save()
-    return res.status(200).json({ message: 'Review submitted successfully' })
+    return res.status(201).json({ message: 'Review submitted successfully' })
   } catch (e) {
     console.error('e', e)
     res.status(500).json({ error: e.message })
