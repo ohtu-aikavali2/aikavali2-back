@@ -10,11 +10,15 @@ const Answer = require('../models/answer')
 const RepetitionItem = require('../models/repetitionItem')
 const Group = require('../models/group')
 const QuestionReview = require('../models/questionReview.js')
+const Flag = require('../models/flag')
 const sm = require('../utils/sm')
 
 questionRouter.get('/', async (req, res) => {
   try {
-    const baseQuestions = await BaseQuestion.find().populate('question.item').populate('correctAnswer')
+    const baseQuestions = await BaseQuestion.find()
+      .populate('question.item')
+      .populate({ path: 'group', populate: { path: 'course', model: 'Course' }, model: 'Group' })
+      .populate('correctAnswer')
     res.status(200).json(baseQuestions)
   } catch (e) {
     console.error('e', e)
@@ -62,7 +66,10 @@ questionRouter.delete('/:id', async (req, res) => {
     }
 
     // Remove all found question reviews
-    await QuestionReview.deleteMany({ 'question': baseQuestion.question.item })
+    await QuestionReview.deleteMany({ 'question': id })
+
+    // Remove all found flags
+    await Flag.deleteMany({ 'question': id })
 
     // Remove all found answer entities
     await Answer.deleteMany({ 'question': id })
@@ -133,10 +140,14 @@ questionRouter.get('/random', async (req, res) => {
     if (course) {
       baseQuestions = baseQuestions.filter((question) => {
         if (question.group && question.group.course) {
-          return question.group.course.name === course
+          // Filter by deleted aswell
+          return (question.group.course.name === course) && !question.deleted
         }
         return false
       })
+    } else {
+      // Only return the ones that are not deleted
+      baseQuestions = baseQuestions.filter(q => !q.deleted)
     }
 
     // No such questions left
@@ -154,7 +165,8 @@ questionRouter.get('/random', async (req, res) => {
       .sort((a, b) => a[0] - b[0])
       .map(a => a[1])
     randQuestion.question.item.options = shuffleArray(randQuestion.question.item.options)
-    res.status(200).json(randQuestion.question)
+    // Tämä muutettu, saadaan tätä kautta ängettyä tarvittavaa infoa fronttiin
+    res.status(200).json({ ...randQuestion.question, _id: randQuestion._id })
   } catch (e) {
     console.error('e', e)
     res.status(500).json({ error: e.message })
@@ -294,6 +306,122 @@ questionRouter.post('/answer', async (req, res) => {
 
     // If the received answer was wrong, the response will contain the correct answer as well
     res.status(200).json({ isCorrect, ...(!isCorrect && { correctAnswer: answeredQuestion.correctAnswer.value }) })
+  } catch (e) {
+    console.error('e', e)
+    res.status(500).json({ error: e.message })
+  }
+})
+
+// Returns all the questions which have flags
+questionRouter.get('/flagged', async (req, res) => {
+  try {
+    const flaggedQuestions = await BaseQuestion.find({ flags: { $exists: true, $ne: [] }, deleted: false })
+      .populate('question.item')
+      .populate({ path: 'group', populate: { path: 'course', model: 'Course' }, model: 'Group' })
+      .populate('correctAnswer')
+    res.status(200).json(flaggedQuestions)
+  } catch (e) {
+    console.error('e', e)
+    res.status(500).json({ error: e.message })
+  }
+})
+
+// "Delete" questions
+questionRouter.put('/delete', async (req, res) => {
+  try {
+    // Checks for token
+    const { token, questionIDs } = req.body
+    if (!token) {
+      return res.status(422).json({ error: 'Missing token!' })
+    }
+    const { userId } = jwt.verify(token, process.env.SECRET)
+    const user = await User.findById(userId)
+    if (!user) {
+      return res.status(404).json({ error: 'Invalid token!' })
+    }
+
+    if (questionIDs.length === 0) {
+      return res.status(422).json({ error: 'Missing questionsIDs!' })
+    }
+    for (let i = 0; i < questionIDs.length; i++) {
+      if (!mongoose.Types.ObjectId.isValid(questionIDs[i])) {
+        console.log('väärän tyyppinen id')
+        continue
+      }
+      const question = await BaseQuestion.findById(questionIDs[i])
+      if (!question) {
+        console.log('COULD NOT FIND THE QUESTION')
+        continue
+      }
+      question.deleted = true
+      await question.save()
+    }
+    res.status(204).end()
+  } catch (e) {
+    console.error('e', e)
+    res.status(500).json({ error: e.message })
+  }
+})
+
+// "Restore" questions (make them available again)
+questionRouter.put('/restore', async (req, res) => {
+  try {
+    // Checks for token
+    const { token, questionIDs } = req.body
+    if (!token) {
+      return res.status(422).json({ error: 'Missing token!' })
+    }
+    const { userId } = jwt.verify(token, process.env.SECRET)
+    const user = await User.findById(userId)
+    if (!user) {
+      return res.status(404).json({ error: 'Invalid token!' })
+    }
+
+    if (questionIDs.length === 0) {
+      return res.status(422).json({ error: 'Missing questionsIDs!' })
+    }
+    for (let i = 0; i < questionIDs.length; i++) {
+      if (!mongoose.Types.ObjectId.isValid(questionIDs[i])) {
+        console.log('väärän tyyppinen id')
+        continue
+      }
+      const question = await BaseQuestion.findById(questionIDs[i])
+      if (!question) {
+        console.log('COULD NOT FIND THE QUESTION')
+        continue
+      }
+      question.deleted = false
+      await question.save()
+    }
+    res.status(204).end()
+  } catch (e) {
+    console.error('e', e)
+    res.status(500).json({ error: e.message })
+  }
+})
+
+// Returns all the "Deleted" questions
+questionRouter.get('/deleted', async (req, res) => {
+  try {
+    const deletedQuestions = await BaseQuestion.find({ deleted: true })
+      .populate('question.item')
+      .populate({ path: 'group', populate: { path: 'course', model: 'Course' }, model: 'Group' })
+      .populate('correctAnswer')
+    res.status(200).json(deletedQuestions)
+  } catch (e) {
+    console.error('e', e)
+    res.status(500).json({ error: e.message })
+  }
+})
+
+// Returns all the questions which have not been deleted
+questionRouter.get('/available', async (req, res) => {
+  try {
+    const baseQuestions = await BaseQuestion.find({ deleted: { $ne: true } })
+      .populate('question.item')
+      .populate({ path: 'group', populate: { path: 'course', model: 'Course' }, model: 'Group' })
+      .populate('correctAnswer')
+    res.status(200).json(baseQuestions)
   } catch (e) {
     console.error('e', e)
     res.status(500).json({ error: e.message })
