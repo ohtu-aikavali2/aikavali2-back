@@ -82,7 +82,7 @@ userRouter.get('/verifyToken', async (req, res) => {
   }
 })
 
-userRouter.patch('/:id/hasSeenIntro', async (req, res) => {
+userRouter.patch('/hasSeenIntro', async (req, res) => {
   try {
     const { hasSeenIntro, token } = req.body
     // Verify user
