@@ -340,6 +340,10 @@ questionRouter.put('/delete', async (req, res) => {
       return res.status(404).json({ error: 'Invalid token!' })
     }
 
+    if (!user.administrator) {
+      return res.status(403).json({ error: 'Unauthorized' })
+    }
+
     if (questionIDs.length === 0) {
       return res.status(422).json({ error: 'Missing questionsIDs!' })
     }
@@ -375,6 +379,10 @@ questionRouter.put('/restore', async (req, res) => {
     const user = await User.findById(userId)
     if (!user) {
       return res.status(404).json({ error: 'Invalid token!' })
+    }
+
+    if (!user.administrator) {
+      return res.status(403).json({ error: 'Unauthorized' })
     }
 
     if (questionIDs.length === 0) {
