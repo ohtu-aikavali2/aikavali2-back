@@ -1,4 +1,5 @@
 const supertest = require('supertest')
+const jwt = require('jsonwebtoken')
 const { app, server, apiUrl } = require('../../src/server')
 const api = supertest(app)
 const BaseQuestion = require('../../src/models/baseQuestion')
@@ -73,10 +74,10 @@ describe('question controller', () => {
     await q2.save()
 
     // Generate a user and store the
-    // received token
-    const response = await api
-      .post(`${apiUrl}/user/generate`)
-    token = response.body.token
+    // received token'
+    const user = new User({ _id: 1, administrator: true, username: 'test user' })
+    await user.save()
+    token = jwt.sign({ userId: user._id, administrator: user.administrator }, process.env.SECRET)
   })
 
   describe(testUrl, () => {
@@ -112,6 +113,7 @@ describe('question controller', () => {
       // Delete the first questions
       let response = await api
         .delete(`${testUrl}/${preQuestions[0]._id}`)
+        .set('Authorization', `bearer ${ token }`)
       expect(response.status).toBe(200)
       expect(response.body.message).toBe('deleted successfully!')
 
@@ -142,11 +144,13 @@ describe('question controller', () => {
       // Check validation
       response = await api
         .delete(`${testUrl}/${preQuestions[0]._id}`)
+        .set('Authorization', `bearer ${ token }`)
       expect(response.status).toBe(404)
       expect(response.body.error).toBe('question not found')
 
       response = await api
         .delete(`${testUrl}/malformed`)
+        .set('Authorization', `bearer ${ token }`)
       expect(response.status).toBe(400)
       expect(response.body.error).toBe('malformed id')
     })

@@ -19,19 +19,30 @@ userRouter.post('/login', async (req, res) => {
     if (!foundUser) {
       // If this is the first login for this specific user, create
       // a new user entity
-      const admins = process.env.ADMIN_EMAILS.split(' ')
-      const isAdmin = data.administrator || admins.includes(data.email)
-      foundUser = new User({ answers: [], _id: data.id, administrator: isAdmin, username: data.username })
+      foundUser = new User({ answers: [], _id: data.id, administrator: data.administrator, username: data.username })
       await foundUser.save()
+    }
+
+    // Check if user has been given admin rights
+    if (!foundUser.administrator) {
+      const admins = process.env.ADMIN_EMAILS.split(' ')
+      const isAdmin = admins.includes(data.email)
+      if (isAdmin) {
+        foundUser = await User.findOneAndUpdate(
+          { _id: foundUser._id },
+          { administrator: true },
+          { new: true }
+        )
+      }
     }
 
     // Create token
     const token = jwt.sign({ userId: foundUser._id, administrator: foundUser.administrator }, process.env.SECRET)
-
     return res.status(200).json({
       id: foundUser._id,
       username: foundUser.username,
       administrator: foundUser.administrator,
+      hasSeenIntro: foundUser.hasSeenIntro,
       token
     })
   } catch (e) {
@@ -68,6 +79,26 @@ userRouter.get('/verifyToken', async (req, res) => {
   } catch (e) {
     console.error(e)
     res.status(500).json({ message: 'There was something wrong with the token!' })
+  }
+})
+
+userRouter.patch('/:id/hasSeenIntro', async (req, res) => {
+  try {
+    const { hasSeenIntro, token } = req.body
+    // Verify user
+    if (!token) {
+      return res.status(401).json({ error: 'token missing' })
+    }
+    const { userId } = jwt.verify(token, process.env.SECRET)
+    // Update user
+    const updatedUser = await User.findOneAndUpdate(
+      { _id: userId },
+      { hasSeenIntro }
+    )
+    res.status(200).json(updatedUser)
+  } catch (e) {
+    console.error(e)
+    res.status(500).json({ error: e.message })
   }
 })
 
