@@ -29,6 +29,17 @@ questionRouter.get('/', async (req, res) => {
 questionRouter.delete('/:id', async (req, res) => {
   try {
     const { id } = req.params
+    const { token } = req.body
+    // Verify user rights
+    if (!token) {
+      return res.status(401).json({ error: 'token missing' })
+    }
+    const { userId } = jwt.verify(token, process.env.SECRET)
+    const foundUser = await User.findById(userId)
+    if (!foundUser.administrator) {
+      return res.status(403).json({ error: 'Unauthorized' })
+    }
+
     // Validate id
     if (!mongoose.Types.ObjectId.isValid(id)) {
       return res.status(400).json({ error: 'malformed id' })

@@ -5,6 +5,7 @@ const userSchema = new mongoose.Schema({
   administrator: mongoose.Schema.Types.Boolean,
   username: mongoose.Schema.Types.String,
   answers: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Answer' }],
+  hasSeenIntro: { type: mongoose.Schema.Types.Boolean, default: false }
 })
 
 const User = mongoose.model('User', userSchema)
