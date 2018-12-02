@@ -102,4 +102,14 @@ userRouter.patch('/hasSeenIntro', async (req, res) => {
   }
 })
 
+userRouter.get('/resetIntro', async (req, res) => {
+  try {
+    await User.updateMany({}, { hasSeenIntro: false })
+    res.status(200).json({ message: 'intro reseted' })
+  } catch (e) {
+    console.error(e)
+    res.status(500).json({ error: e.message })
+  }
+})
+
 module.exports = userRouter
