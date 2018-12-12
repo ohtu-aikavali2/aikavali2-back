@@ -27,13 +27,25 @@ courseRouter.get('/:name', async (req, res) => {
 
 courseRouter.post('/', async (req, res) => {
   try {
-    const { name } = req.body
+    const { name, imageSrc, description } = req.body
     if (!name) {
       return res.status(422).json({ error: 'course name missing' })
     }
-    const newCourse = new Course({ name })
+    const newCourse = new Course({ name, imageSrc, description })
     await newCourse.save()
     res.status(201).json(newCourse)
+  } catch (e) {
+    console.error(e)
+    res.status(500).json({ error: e.message })
+  }
+})
+
+courseRouter.patch('/:id', async (req, res) => {
+  try {
+    const attributes = req.body
+    const { id } = req.params
+    const updatedCourse = await Course.findOneAndUpdate({ _id: id }, { ...attributes }, { new: true })
+    res.status(200).json(updatedCourse)
   } catch (e) {
     console.error(e)
     res.status(500).json({ error: e.message })
