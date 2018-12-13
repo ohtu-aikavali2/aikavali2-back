@@ -25,7 +25,7 @@ describe('answer controller', () => {
     await answer2.save()
   })
 
-  describe(`${apiUrl}/:userId`, () => {
+  describe(`${testUrl}/:userId`, () => {
     test('GET', async () => {
       // Check that all answers are returned
       const response = await api
