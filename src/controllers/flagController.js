@@ -36,7 +36,7 @@ flagRouter.post('/', async (req, res) => {
     question.recentFlag = savedFlag.timestamp
     await question.save()
 
-    return res.status(200).json(savedFlag)
+    return res.status(201).json(savedFlag)
   } catch (e) {
     console.error(e)
     res.status(500).json({ error: e.message })

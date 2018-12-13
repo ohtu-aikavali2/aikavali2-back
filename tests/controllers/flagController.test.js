@@ -2,31 +2,31 @@ const mongoose = require('mongoose')
 const supertest = require('supertest')
 const { app, server, apiUrl } = require('../../src/server')
 const api = supertest(app)
-const QuestionReview = require('../../src/models/questionReview')
+const Flag = require('../../src/models/flag')
 const User = require('../../src/models/user')
 const BaseQuestion = require('../../src/models/baseQuestion')
 const PrintQuestion = require('../../src/models/printQuestion')
-const testUrl = `${apiUrl}/reviews`
+const testUrl = `${apiUrl}/flags`
 
-describe('question review controller', () => {
+describe('answer controller', () => {
   let token
+  let user
   let question
   let baseQuestion
+  let flag
 
   beforeEach(async () => {
     // Remove all DB entities
-    await QuestionReview.deleteMany()
+    await Flag.deleteMany()
     await User.deleteMany()
     await PrintQuestion.deleteMany()
     await BaseQuestion.deleteMany()
 
-    // Generate a token
+    // Generate a user
     const response = await api
       .post(`${apiUrl}/user/generate`)
-
     token = response.body.token
 
-    // Generate question
     question = new PrintQuestion({
       value: 'test',
       options: ['1'],
@@ -41,50 +41,38 @@ describe('question review controller', () => {
       correctAnswer: mongoose.Types.ObjectId()
     })
     await baseQuestion.save()
-    const user = await User.findOne()
-    const questionReview = new QuestionReview({ question: baseQuestion._id, review: '1', user })
-    await questionReview.save()
+    user = await User.findOne()
+    flag = new Flag({
+      question: baseQuestion._id,
+      user
+    })
+    await flag.save()
   })
 
   describe(`${testUrl}`, () => {
+    test('GET', async () => {
+      let response = await api
+        .get(testUrl)
+      expect(response.status).toBe(200)
+      expect(response.body.length).toBe(1)
+    })
+
     test('POST', async () => {
-      // Check that a review can be created
+      // Check that a flag can be created
       let response = await api
         .post(testUrl)
-        .send({ review: '1', questionId: baseQuestion._id })
+        .send({ questionID: baseQuestion._id })
         .set('Authorization', `bearer ${ token }`)
       expect(response.status).toBe(201)
-      expect(response.body.message).toBe('Review submitted successfully')
 
       // Check validation
       response = await api
         .post(testUrl)
-        .send({ review: '1' })
-        .set('Authorization', `bearer ${ token }`)
-      expect(response.status).toBe(422)
-      expect(response.body.error).toBe('Some params missing')
-
-      response = await api
-        .post(testUrl)
-        .send({ questionId: baseQuestion._id })
-        .set('Authorization', `bearer ${ token }`)
-      expect(response.status).toBe(422)
-      expect(response.body.error).toBe('Some params missing')
-
-      response = await api
-        .post(testUrl)
-        .send({ review: '1', questionId: baseQuestion._id })
-      expect(response.status).toBe(422)
-      expect(response.body.error).toBe('Some params missing')
-
-      response = await api
-        .post(testUrl)
-        .send({ review: '1', questionId: '123' })
+        .send({ questionID: '123' })
         .set('Authorization', `bearer ${ token }`)
       expect(response.status).toBe(400)
-      expect(response.body.error).toBe('malformed id')
+      expect(response.body.error).toBe('Question ID malformed!')
 
-      // Check that review can't be made for a non-existent question
       const temporaryQuestion = new BaseQuestion({
         type: 'print',
         question: { kind: 'PrintQuestion', item: question._id },
@@ -92,20 +80,36 @@ describe('question review controller', () => {
       })
       await temporaryQuestion.save()
       await BaseQuestion.deleteOne({ _id: temporaryQuestion._id })
+      response = await api
+        .post(testUrl)
+        .send({ questionID: temporaryQuestion._id })
+        .set('Authorization', `bearer ${ token }`)
+      expect(response.status).toBe(404)
+      expect(response.body.error).toBe('No question found!')
 
       response = await api
         .post(testUrl)
-        .send({ review: '1', questionId: temporaryQuestion._id })
-        .set('Authorization', `bearer ${ token }`)
-      expect(response.status).toBe(404)
-      expect(response.body.error).toBe('basequestion not found')
+        .send({ questionID: baseQuestion._id })
+      expect(response.status).toBe(422)
+      expect(response.body.error).toBe('Missing token!')
     })
+  })
 
+  describe(`${testUrl}/question/:id`, async () => {
     test('GET', async () => {
       let response = await api
-        .get(testUrl)
+        .get(`${testUrl}/question/${baseQuestion._id}`)
       expect(response.status).toBe(200)
       expect(response.body.length).toBe(1)
+    })
+  })
+
+  describe(`${testUrl}/:id`, async () => {
+    test('GET', async () => {
+      let response = await api
+        .get(`${testUrl}/${flag._id}`)
+      expect(response.status).toBe(200)
+      expect(response.body._id).toBe(String(flag._id))
     })
   })
 })
