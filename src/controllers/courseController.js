@@ -1,5 +1,7 @@
 const courseRouter = require('express').Router()
 const Course = require('../models/course')
+const User = require('../models/user')
+const jwt = require('jsonwebtoken')
 
 courseRouter.get('/', async (req, res) => {
   try {
@@ -27,7 +29,16 @@ courseRouter.get('/:name', async (req, res) => {
 
 courseRouter.post('/', async (req, res) => {
   try {
-    const { name, imageSrc, description } = req.body
+    const { name, imageSrc, description, token } = req.body
+    // Verify user rights
+    if (!token) {
+      return res.status(401).json({ error: 'token missing' })
+    }
+    const { userId } = jwt.verify(token, process.env.SECRET)
+    const foundUser = await User.findById(userId)
+    if (!foundUser.administrator) {
+      return res.status(403).json({ error: 'Unauthorized' })
+    }
     if (!name) {
       return res.status(422).json({ error: 'course name missing' })
     }
@@ -42,7 +53,16 @@ courseRouter.post('/', async (req, res) => {
 
 courseRouter.patch('/:id', async (req, res) => {
   try {
-    const attributes = req.body
+    const { token, ...attributes } = req.body
+    // Verify user rights
+    if (!token) {
+      return res.status(401).json({ error: 'token missing' })
+    }
+    const { userId } = jwt.verify(token, process.env.SECRET)
+    const foundUser = await User.findById(userId)
+    if (!foundUser.administrator) {
+      return res.status(403).json({ error: 'Unauthorized' })
+    }
     const { id } = req.params
     const updatedCourse = await Course.findOneAndUpdate({ _id: id }, { ...attributes }, { new: true })
     res.status(200).json(updatedCourse)

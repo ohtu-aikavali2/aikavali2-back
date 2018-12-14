@@ -3,6 +3,7 @@ const mongoose = require('mongoose')
 const questionRouter = require('express').Router()
 const BaseQuestion = require('../models/baseQuestion')
 const PrintQuestion = require('../models/printQuestion')
+const GenerauQuestion = require('../models/generalQuestion')
 const CompileQuestion = require('../models/compileQuestion')
 const CorrectAnswer = require('../models/correctAnswer')
 const User = require('../models/user')
@@ -225,6 +226,12 @@ questionRouter.post('/', async (req, res) => {
       kind = 'CompileQuestion'
       newQuestion = new CompileQuestion({ options: options.concat(correctAnswer) })
       await newQuestion.save()
+    } else if (type === 'general') {
+      kind = 'GeneralQuestion'
+      newQuestion = new GenerauQuestion({ value, options: options.concat(correctAnswer) })
+      await newQuestion.save()
+    } else {
+      return res.status(401).json({ error: 'no such question type!' })
     }
 
     // Create a new BaseQuestion entity and save it
