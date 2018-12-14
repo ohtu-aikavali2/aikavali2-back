@@ -2,18 +2,28 @@ const supertest = require('supertest')
 const { app, server, apiUrl } = require('../../src/server')
 const api = supertest(app)
 const Course = require('../../src/models/course')
+const User = require('../../src/models/user')
 const testUrl = `${apiUrl}/courses`
 
 describe('course controller', () => {
+  let token
+
   beforeEach(async () => {
     // Remove all DB entities
     await Course.deleteMany()
+    await User.deleteMany()
 
     // Create some test courses
     const course1 = new Course({ name: 'test1' })
     await course1.save()
     const course2 = new Course({ name: 'test2' })
     await course2.save()
+
+    // Generate a token
+    const response = await api
+      .post(`${apiUrl}/user/generate`)
+    token = response.body.token
+    await User.updateOne({ _id: response.body.id }, { administrator: true })
   })
 
   describe(`${apiUrl}/`, () => {
@@ -30,6 +40,7 @@ describe('course controller', () => {
       let response = await api
         .post(testUrl)
         .send({ name: 'new' })
+        .set('Authorization', `bearer ${ token }`)
       expect(response.status).toBe(201)
       expect(response.body.name).toBe('new')
       const foundCourse = await Course.find({ name: 'new' })
@@ -39,6 +50,7 @@ describe('course controller', () => {
       response = await api
         .post(testUrl)
         .send({})
+        .set('Authorization', `bearer ${ token }`)
       expect(response.status).toBe(422)
       expect(response.body.error).toBe('course name missing')
     })

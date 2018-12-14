@@ -1,7 +1,9 @@
 const mongoose = require('mongoose')
+const jwt = require('jsonwebtoken')
 const groupRouter = require('express').Router()
 const Group = require('../models/group')
 const Course = require('../models/course')
+const User = require('../models/user')
 
 groupRouter.get('/', async (req, res) => {
   try {
@@ -15,7 +17,16 @@ groupRouter.get('/', async (req, res) => {
 
 groupRouter.post('/', async (req, res) => {
   try {
-    const { name, courseId } = req.body
+    const { name, courseId, token } = req.body
+    // Verify user rights
+    if (!token) {
+      return res.status(401).json({ error: 'token missing' })
+    }
+    const { userId } = jwt.verify(token, process.env.SECRET)
+    const foundUser = await User.findById(userId)
+    if (!foundUser.administrator) {
+      return res.status(403).json({ error: 'Unauthorized' })
+    }
     if (!(name && courseId)) {
       return res.status(422).json({ error: 'some params missing' })
     }

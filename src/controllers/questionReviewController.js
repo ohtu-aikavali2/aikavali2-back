@@ -111,15 +111,15 @@ questionReviewRouter.get('/:id', async (req, res) => {
 // Delete review
 questionReviewRouter.delete('/:id', async (req, res) => {
   try {
-    // Checks for token
     const { token } = req.body
+    // Verify user rights
     if (!token) {
-      return res.status(422).json({ error: 'Missing token!' })
+      return res.status(401).json({ error: 'token missing' })
     }
     const { userId } = jwt.verify(token, process.env.SECRET)
     const user = await User.findById(userId)
-    if (!user) {
-      return res.status(404).json({ error: 'Invalid token!' })
+    if (!user.administrator) {
+      return res.status(403).json({ error: 'Unauthorized' })
     }
 
     const reviewID = req.params.id
