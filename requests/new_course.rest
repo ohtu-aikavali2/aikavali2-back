@@ -1,0 +1,9 @@
+POST http://localhost:8080/courses
+Content-Type: application/json
+
+{
+  "name": "Testikurssi",
+  "groups": [],
+  "imageSrc": "https://66.media.tumblr.com/7aefe2035855fa6404a945341dd4b352/tumblr_ojs0qdo0If1v56zzqo2_1280.jpg",
+  "description": "testailukurssi"
+}

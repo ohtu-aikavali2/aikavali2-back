@@ -13,7 +13,8 @@ const baseQuestionSchema = new mongoose.Schema({
   reviews: [{ type: mongoose.Schema.Types.ObjectId, ref: 'QuestionReview' }],
   reviewSum: { type: mongoose.Schema.Types.Number, default: 0 },
   averageRating: { type: mongoose.Schema.Types.Number, default: 0 },
-  deleted: { type: mongoose.Schema.Types.Boolean, default: false }
+  deleted: { type: mongoose.Schema.Types.Boolean, default: false },
+  concepts: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Concept' }]
 })
 
 const BaseQuestion = mongoose.model('BaseQuestion', baseQuestionSchema)

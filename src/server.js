@@ -37,6 +37,7 @@ const questionReviewController = require('./controllers/questionReviewController
 const courseController = require('./controllers/courseController')
 const groupController = require('./controllers/groupController')
 const flagController = require('./controllers/flagController')
+const conceptController = require('./controllers/conceptController')
 app.use(`${apiUrl}/questions`, questionController)
 app.use(`${apiUrl}/user`, userController)
 app.use(`${apiUrl}/answer`, answerController)
@@ -44,6 +45,7 @@ app.use(`${apiUrl}/reviews`, questionReviewController)
 app.use(`${apiUrl}/courses`, courseController)
 app.use(`${apiUrl}/groups`, groupController)
 app.use(`${apiUrl}/flags`, flagController)
+app.use(`${apiUrl}/concepts`, conceptController)
 app.use(`${apiUrl}`, swagger.serve, swagger.setup(config.swaggerDoc))
 app.get('/', (req, res) => res.status(404).send(`This isn't the page you're looking for! Please go to <a href=${apiUrl}>${apiUrl}</a>`))
 
@@ -61,7 +63,7 @@ mongoose.set('useFindAndModify', false)
 // CREATE SERVER
 const server = http.createServer(app)
 server.listen(config.port, () => {
-  console.log(`Listening on port ${ config.port }`)
+  console.log(`Listening on port ${config.port}`)
 })
 
 server.on('close', () => {

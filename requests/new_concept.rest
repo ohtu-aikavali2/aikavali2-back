@@ -1,0 +1,7 @@
+POST http://localhost:8080/concepts
+Content-Type: application/json
+
+{
+  "name": "testikonsepti",
+  "course": 1
+}
