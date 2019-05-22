@@ -9,6 +9,6 @@ deploy:
   provider: heroku
   api_key:
     secure: B0AHXiGXoTV50rZARWote8r81eQvsoRKhXc6sQvIeyggbTCcjvgVM5y8bSk8BzhcKa6lD1U59snc/IZGZUpoUBwMXoDcbnQvO+9XYHDvaNYFYZxzYHpjP+ax7r7S6e1uPT0/6cfGg2vTAiqlHCOtZlakeixaGjL6YE4veVA8GTogcTm9daNQc++78BEs2KD7PNzG28q/yDcKaHbscqglkcbgG7yVTbaqBwmQ4Pfo/MtpXIyUKaXP2FeaR3BkSbTdFoJ+C4LKtR+JhaqluJDkFrPI/ROHWTJDxa7eRPsPS924j0uhAWjseHdnY/jQtr53i5Wk54YQ6ewxIofx5kuLovveeVa297RVFUIlmvWagrb8LoArMPASql39aABuSq9F1v+SyR115cLOI5T6V1cmik1dnNbNIZwWEv7FTrIlEcaM5pfuGz377MEN8AKplRXH5lwv2VNSSbNyiLqLNX+KkRSzE8PvhfET6Y3l+GVu0uprV/HdEIbWsW3zEm7tb65bOzhsnFykFcNsGdomxq6xTGMoyKn8neumJHTZuTQx7ZOhT4N/xd0JT3NKimN3L/JVd3wKLAbmWxjX2vWZ+4k0nN5h2Cw3OZ2HjGOMYNwIUv+HUQ6eoLTqW1kZmEmd/O8FW14zBfYoe4Z4ko+ojdtUVWr2uTPaPTR18Img8DU6oGk=
-  app: aikavali-back
+  app: aikavali-back2
   on:
     branch: master
