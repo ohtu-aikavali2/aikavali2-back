@@ -1,4 +1,3 @@
-// const jwt = require('jsonwebtoken')
 // const mongoose = require('mongoose')
 const conceptRouter = require('express').Router()
 const Concept = require('../models/concept')
@@ -32,5 +31,30 @@ conceptRouter.post('/', async (req, res) => {
   }
 })
 
+conceptRouter.delete('/:id', async (req, res) => {
+  try {
+    const { id } = req.params
+    const { token } = req.body
+    console.log(token)
+    //Verify user rights
+    if (!token) {
+      return res.status(401).json({ error: 'token missing ' })
+    }
+
+    //Validate that admin is deleting
+    /*     const { userId } = jwt.verify(token, process.env.SECRET)
+    const foundUser = await User.findById(userId)
+    if (!foundUser.administrator) {
+      return res.status(403).json({ error: 'Unauthorized '})
+    } */
+
+    await Concept.findByIdAndRemove(id)
+
+    res.status(200).json({ message: 'deleted successfully! ' })
+  } catch (e) {
+    console.error('e', e)
+    res.status(500).json({ error: e.message })
+  }
+})
 
 module.exports = conceptRouter

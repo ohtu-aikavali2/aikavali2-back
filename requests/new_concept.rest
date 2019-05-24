@@ -3,5 +3,5 @@ Content-Type: application/json
 
 {
   "name": "test",
-  "course": "5ce25c35bf11336976322fbe",
+  "course": "5ce25c35bf11336976322fbe"
 }
