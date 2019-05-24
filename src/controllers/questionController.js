@@ -247,7 +247,8 @@ questionRouter.post('/', async (req, res) => {
       type,
       question: { kind, item: newQuestion._id },
       correctAnswer: newCorrectAnswer._id,
-      group: group._id
+      group: group._id,
+      concepts: concepts
     })
     await newBaseQuestion.save()
 

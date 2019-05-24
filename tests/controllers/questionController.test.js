@@ -10,6 +10,7 @@ const Answer = require('../../src/models/answer')
 const User = require('../../src/models/user')
 const RepetitionItem = require('../../src/models/repetitionItem')
 const Group = require('../../src/models/group')
+const Concept = require('../../src/models/concept')
 const testUrl = `${apiUrl}/questions`
 
 // A helper function to get specific type of
@@ -39,10 +40,13 @@ describe('question controller', () => {
     await User.deleteMany()
     await RepetitionItem.deleteMany()
     await Group.deleteMany()
+    await Concept.deleteMany()
 
     // Create a group
     testGroup = new Group({ name: 'test' })
     await testGroup.save()
+
+    const testConcepts = [new Concept({ name: 'for' }), new Concept({ name: 'if' })]
 
     // Create a CorrectAnswer
     const newCorrectAnswer1 = new CorrectAnswer({ value: 'test' })
@@ -59,7 +63,8 @@ describe('question controller', () => {
     const q1 = new BaseQuestion({
       type: 'print',
       question: { kind: 'PrintQuestion', item: newPrintQuestion._id },
-      correctAnswer: newCorrectAnswer1._id
+      correctAnswer: newCorrectAnswer1._id,
+      concepts: testConcepts
     })
     await q1.save()
 
@@ -69,7 +74,8 @@ describe('question controller', () => {
     const q2 = new BaseQuestion({
       type: 'compile',
       question: { kind: 'CompileQuestion', item: newCompileQuestion._id, type: 'compile', groupId: testGroup._id },
-      correctAnswer: newCorrectAnswer2._id
+      correctAnswer: newCorrectAnswer2._id,
+      concepts: testConcepts
     })
     await q2.save()
 
@@ -187,7 +193,7 @@ describe('question controller', () => {
       const originalPrintQuestions = await getQuestionsOfType('print')
       await api
         .post(`${testUrl}`)
-        .send({ value: '?', correctAnswer: 'a', options: ['b', 'c', 'd'], groupId: testGroup._id, type: 'print' })
+        .send({ value: '?', correctAnswer: 'a', options: ['b', 'c', 'd'], groupId: testGroup._id, type: 'print', concepts: [(new Concept({ name: test }))] })
       const updatedPrintQuestions = await getQuestionsOfType('print')
       expect(updatedPrintQuestions.length).toBe(originalPrintQuestions.length + 1)
 
@@ -205,7 +211,7 @@ describe('question controller', () => {
       const originalCompileQuestions = await getQuestionsOfType('compile')
       await api
         .post(`${testUrl}`)
-        .send({ correctAnswer: 'a', options: ['b', 'c', 'd'], groupId: testGroup._id, type: 'compile' })
+        .send({ correctAnswer: 'a', options: ['b', 'c', 'd'], groupId: testGroup._id, type: 'compile',  concepts: [(new Concept({ name: test }))] })
       const updatedCompileQuestions = await getQuestionsOfType('compile')
       expect(updatedCompileQuestions.length).toBe(originalCompileQuestions.length + 1)
     })

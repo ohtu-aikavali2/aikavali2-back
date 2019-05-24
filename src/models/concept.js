@@ -3,7 +3,7 @@ const mongoose = require('mongoose')
 const conceptSchema = new mongoose.Schema({
   name: mongoose.Schema.Types.String,
   course: { type: mongoose.Schema.Types.ObjectId, ref: 'Course' },
-  baseQuestions: [{ type: mongoose.Schema.Types.ObjectId, ref: 'BaseQuestion' }]
+
   // add this if the connection between user and concept needs to be created
   // user: { type: mongoose.Schema.Types.ObjectId, ref: 'User' }
 })
