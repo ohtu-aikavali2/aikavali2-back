@@ -3,7 +3,7 @@ const mongoose = require('mongoose')
 const questionRouter = require('express').Router()
 const BaseQuestion = require('../models/baseQuestion')
 const PrintQuestion = require('../models/printQuestion')
-const GenerauQuestion = require('../models/generalQuestion')
+const GeneralQuestion = require('../models/generalQuestion')
 const CompileQuestion = require('../models/compileQuestion')
 const CorrectAnswer = require('../models/correctAnswer')
 const User = require('../models/user')
@@ -192,7 +192,8 @@ questionRouter.post('/', async (req, res) => {
       correctAnswer,
       options,
       type,
-      groupId
+      groupId,
+      concepts
     } = req.body
 
     // Validate parameters
@@ -212,6 +213,13 @@ questionRouter.post('/', async (req, res) => {
       return res.status(400).json({ error: 'group not found' })
     }
 
+    // Check that concepts is array and that question contains concepts
+    if (!Array.isArray(concepts)) {
+      return res.status(401).json({ error: 'concepts should be of type array' })
+    } else if (concepts.length === 0) {
+      return res.status(401).json({ error: 'there should be at least one concept' })
+    }
+
     // Create a new CorrectAnswer entity and save it
     const newCorrectAnswer = new CorrectAnswer({ value: correctAnswer })
     await newCorrectAnswer.save()
@@ -228,7 +236,7 @@ questionRouter.post('/', async (req, res) => {
       await newQuestion.save()
     } else if (type === 'general') {
       kind = 'GeneralQuestion'
-      newQuestion = new GenerauQuestion({ value, options: options.concat(correctAnswer) })
+      newQuestion = new GeneralQuestion({ value, options: options.concat(correctAnswer) })
       await newQuestion.save()
     } else {
       return res.status(401).json({ error: 'no such question type!' })

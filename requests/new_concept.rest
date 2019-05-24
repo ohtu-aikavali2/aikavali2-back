@@ -1,7 +1,8 @@
-POST http://localhost:8080/concepts
+POST http://localhost:8080/api/v1/concepts
 Content-Type: application/json
 
 {
-  "name": "testikonsepti",
-  "course": 1
+  "name": "testikonsepti2",
+  "course": "5ce25c35bf11336976322fbe",
+  "baseQuestions": ["5ce53593c4a7062825aef3d0"]
 }
