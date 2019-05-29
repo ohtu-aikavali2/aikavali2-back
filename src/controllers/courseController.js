@@ -5,7 +5,7 @@ const jwt = require('jsonwebtoken')
 
 courseRouter.get('/', async (req, res) => {
   try {
-    const courses = await Course.find().populate('groups')
+    const courses = await Course.find().populate('groups').populate('concepts')
     res.status(200).json(courses)
   } catch (e) {
     console.error(e)
@@ -16,7 +16,7 @@ courseRouter.get('/', async (req, res) => {
 courseRouter.get('/:name', async (req, res) => {
   try {
     const { name } = req.params
-    const course = await Course.findOne({ name }).populate('groups')
+    const course = await Course.findOne({ name }).populate('groups').populate('concepts')
     if (!course) {
       return res.status(404).json({ error: 'course not found' })
     }
