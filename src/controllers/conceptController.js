@@ -35,7 +35,6 @@ conceptRouter.delete('/:id', async (req, res) => {
   try {
     const { id } = req.params
     const { token } = req.body
-    console.log(token)
     //Verify user rights
     if (!token) {
       return res.status(401).json({ error: 'token missing ' })
@@ -47,7 +46,6 @@ conceptRouter.delete('/:id', async (req, res) => {
     if (!foundUser.administrator) {
       return res.status(403).json({ error: 'Unauthorized '})
     } */
-
     await Concept.findByIdAndRemove(id)
 
     res.status(200).json({ message: 'deleted successfully! ' })
