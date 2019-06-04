@@ -1,6 +1,6 @@
 # aikavali-back
 [![Build Status](https://travis-ci.org/ohtu-aikavali2/aikavali2-back.svg?branch=master)](https://travis-ci.org/ohtu-aikavali2/aikavali2-back)
-
+[![codecov](https://codecov.io/gh/ohtu-aikavali2/aikavali2-back/branch/master/graph/badge.svg)](https://codecov.io/gh/ohtu-aikavali2/aikavali2-back)
 
 ## Start  
 Install dependencies:
