@@ -274,7 +274,7 @@ questionRouter.post('/answer', async (req, res) => {
     }
 
     // Find the BaseQuestion entity that contains the answered question
-    const answeredQuestion = await BaseQuestion.findOne({ 'question.item': id }).populate('correctAnswer')
+    const answeredQuestion = await BaseQuestion.findOne({ 'question.item': id }).populate('correctAnswers')
 
     let isCorrect, answerQuality
 
@@ -284,7 +284,7 @@ questionRouter.post('/answer', async (req, res) => {
       answerQuality = 0
     } else {
       // Check if the received answer is correct
-      isCorrect = answer === answeredQuestion.correctAnswer.value
+      isCorrect = answeredQuestion.correctAnswers.value.includes(answer)
 
       // Set answer quality = 'how difficult the question was'
       // Currently users can't rate questions, so we need to use either 1 for false or 5 for correct
@@ -317,8 +317,8 @@ questionRouter.post('/answer', async (req, res) => {
     user.answers = user.answers.concat(userAnswer._id)
     await user.save()
 
-    // If the received answer was wrong, the response will contain the correct answer as well
-    res.status(200).json({ isCorrect, ...(!isCorrect && { correctAnswer: answeredQuestion.correctAnswer.value }) })
+    // If the received answer was wrong, the response will contain the correct answers as well
+    res.status(200).json({ isCorrect, ...(!isCorrect && { correctAnswer: answeredQuestion.correctAnswers.value }) })
   } catch (e) {
     console.error('e', e)
     res.status(500).json({ error: e.message })
