@@ -19,7 +19,7 @@ questionRouter.get('/', async (req, res) => {
     const baseQuestions = await BaseQuestion.find()
       .populate('question.item')
       .populate({ path: 'group', populate: { path: 'course', model: 'Course' }, model: 'Group' })
-      .populate('correctAnswer')
+      .populate('correctAnswers')
     res.status(200).json(baseQuestions)
   } catch (e) {
     console.error('e', e)
@@ -189,7 +189,7 @@ questionRouter.post('/', async (req, res) => {
   try {
     const {
       value,
-      correctAnswer,
+      correctAnswers,
       options,
       type,
       groupId,
@@ -197,7 +197,7 @@ questionRouter.post('/', async (req, res) => {
     } = req.body
 
     // Validate parameters
-    if (!(correctAnswer && options && groupId)) {
+    if (!(correctAnswers && options && groupId)) {
       return res.status(422).json({ error: 'some params missing' })
     }
 
@@ -221,22 +221,14 @@ questionRouter.post('/', async (req, res) => {
     }
 
     // Create a new CorrectAnswer entity and save it
-    const newCorrectAnswer = new CorrectAnswer({ value: correctAnswer })
+    const newCorrectAnswer = new CorrectAnswer({ value: correctAnswers })
     await newCorrectAnswer.save()
 
     // Create a new question entity and save it
     let newQuestion, kind
-    if (type === 'print') {
-      kind = 'PrintQuestion'
-      newQuestion = new PrintQuestion({ value, options: options.concat(correctAnswer) })
-      await newQuestion.save()
-    } else if (type === 'compile') {
-      kind = 'CompileQuestion'
-      newQuestion = new CompileQuestion({ options: options.concat(correctAnswer) })
-      await newQuestion.save()
-    } else if (type === 'general') {
+    if (type === 'general') {
       kind = 'GeneralQuestion'
-      newQuestion = new GeneralQuestion({ value, options: options.concat(correctAnswer) })
+      newQuestion = new GeneralQuestion({ value, options: options.concat(correctAnswers) })
       await newQuestion.save()
     } else {
       return res.status(401).json({ error: 'no such question type!' })
@@ -246,7 +238,7 @@ questionRouter.post('/', async (req, res) => {
     const newBaseQuestion = new BaseQuestion({
       type,
       question: { kind, item: newQuestion._id },
-      correctAnswer: newCorrectAnswer._id,
+      correctAnswers: newCorrectAnswer._id,
       group: group._id,
       concepts: concepts
     })

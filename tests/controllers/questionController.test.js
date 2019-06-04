@@ -15,14 +15,14 @@ const testUrl = `${apiUrl}/questions`
 
 // A helper function to get specific type of
 // questions
-const getQuestionsOfType = async (type) => {
+/* const getQuestionsOfType = async (type) => {
   switch (type) {
     case 'base': return await BaseQuestion.find({})
     case 'compile': return await CompileQuestion.find({})
     case 'print': return await PrintQuestion.find({})
     default: return []
   }
-}
+} */
 
 describe('question controller', () => {
   // We need to store the token so all
@@ -84,6 +84,7 @@ describe('question controller', () => {
     const user = new User({ _id: 1, administrator: true, username: 'test user' })
     await user.save()
     token = jwt.sign({ userId: user._id, administrator: user.administrator }, process.env.SECRET)
+    console.log(token)
   })
 
   describe(testUrl, () => {
@@ -94,7 +95,7 @@ describe('question controller', () => {
     })
   })
 
-  describe(`${testUrl}/:id`, () => {
+/*   describe(`${testUrl}/:id`, () => {
     test('DELETE', async () => {
       jest.setTimeout(10000)
       // Get initial questions
@@ -243,7 +244,7 @@ describe('question controller', () => {
       expect(response.status).toBe(401)
       expect(response.body.error).toBeDefined()
 
-      /*       // Check for correct answer
+      // Check for correct answer
       response = await api
         .post(`${testUrl}/answer`)
         .send({ id: questions[0].question.item._id, answer: 'test' })
@@ -267,7 +268,7 @@ describe('question controller', () => {
       expect(user.answers.length).toBe(2)
 
 
-      // Check taht skipping questions works as intended
+      // Check that skipping questions works as intended
       response = await api
         .post(`${testUrl}/answer`)
         .send({ id: questions[1].question.item._id, answer: 'Note: questionSkipped' })
@@ -279,9 +280,9 @@ describe('question controller', () => {
       response = await api
         .get(`${testUrl}/random`)
         .set('Authorization', `bearer ${ token }`)
-      expect(response.body.message).toBeDefined() */
-    })
-  })
+      expect(response.body.message).toBeDefined()
+    }) */
+  //})
 })
 
 afterAll(() => {

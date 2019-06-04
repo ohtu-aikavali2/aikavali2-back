@@ -1,0 +1,11 @@
+POST http://localhost:8080/api/v1/questions
+Content-Type: application/json
+
+{
+    "value": "Valitse oikea",
+    "correctAnswers": ["oikein", "oikein20", "oikein30"],
+    "options": ["väärin", "väärin20"],
+    "type": "general",
+    "groupId": "5ce3c8a4a5c67e1dd86c6efb",
+    "concepts": ["5ced9890f809a415c0663b84", "5cee2ea84482d91223b02a46"]
+}
