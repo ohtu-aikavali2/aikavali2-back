@@ -4,6 +4,7 @@ const { app, server, apiUrl } = require('../../src/server')
 const api = supertest(app)
 const BaseQuestion = require('../../src/models/baseQuestion')
 const PrintQuestion = require('../../src/models/printQuestion')
+const GeneralQuestion = require('../../src/models/generalQuestion')
 const CompileQuestion = require('../../src/models/compileQuestion')
 const CorrectAnswer = require('../../src/models/correctAnswer')
 const Answer = require('../../src/models/answer')
@@ -15,14 +16,15 @@ const testUrl = `${apiUrl}/questions`
 
 // A helper function to get specific type of
 // questions
-/* const getQuestionsOfType = async (type) => {
+const getQuestionsOfType = async (type) => {
   switch (type) {
     case 'base': return await BaseQuestion.find({})
     case 'compile': return await CompileQuestion.find({})
     case 'print': return await PrintQuestion.find({})
+    case 'general': return await GeneralQuestion.find({})
     default: return []
   }
-} */
+}
 
 describe('question controller', () => {
   // We need to store the token so all
@@ -95,7 +97,7 @@ describe('question controller', () => {
     })
   })
 
-/*   describe(`${testUrl}/:id`, () => {
+  /*   describe(`${testUrl}/:id`, () => {
     test('DELETE', async () => {
       jest.setTimeout(10000)
       // Get initial questions
@@ -161,9 +163,9 @@ describe('question controller', () => {
       expect(response.status).toBe(400)
       expect(response.body.error).toBe('malformed id')
     })
-  })
+  }) */
 
-  describe(`${testUrl}/random`, () => {
+  /*   describe(`${testUrl}/random`, () => {
     test('GET', async () => {
       // Check validation
       let response = await api
@@ -176,13 +178,13 @@ describe('question controller', () => {
         .set('Authorization', `bearer ${ token }`)
       expect(response.body.item.options.length).toBe(4)
     })
-  })
+  }) */
 
   describe(`${testUrl}`, () => {
     test('POST', async () => {
       let response = await api
         .post(`${testUrl}`)
-        .send({ value: '?', correctAnswer: 'a', options: 'WRONG!', type: 'print' })
+        .send({ value: '?', correctAnswers: ['a'], options: 'WRONG!', type: 'general' })
       expect(response.body.error).toBeDefined()
 
       response = await api
@@ -191,12 +193,12 @@ describe('question controller', () => {
       expect(response.status).toBe(422)
       expect(response.body.error).toBeDefined()
 
-      const originalPrintQuestions = await getQuestionsOfType('print')
+      const originalGeneralQuestions = await getQuestionsOfType('general')
       await api
         .post(`${testUrl}`)
-        .send({ value: '?', correctAnswer: 'a', options: ['b', 'c', 'd'], groupId: testGroup._id, type: 'print', concepts: [(new Concept({ name: test }))] })
-      const updatedPrintQuestions = await getQuestionsOfType('print')
-      expect(updatedPrintQuestions.length).toBe(originalPrintQuestions.length + 1)
+        .send({ value: '?', correctAnswers: ['a'], options: ['b', 'c', 'd'], groupId: testGroup._id, type: 'general', concepts: [(new Concept({ name: test }))] })
+      const updatedGeneralQuestions = await getQuestionsOfType('general')
+      expect(updatedGeneralQuestions.length).toBe(originalGeneralQuestions.length + 1)
 
       response = await api
         .post(`${testUrl}`)
@@ -209,17 +211,11 @@ describe('question controller', () => {
       expect(response.status).toBe(422)
       expect(response.body.error).toBeDefined()
 
-      const originalCompileQuestions = await getQuestionsOfType('compile')
-      await api
-        .post(`${testUrl}`)
-        .send({ correctAnswer: 'a', options: ['b', 'c', 'd'], groupId: testGroup._id, type: 'compile',  concepts: [(new Concept({ name: test }))] })
-      const updatedCompileQuestions = await getQuestionsOfType('compile')
-      expect(updatedCompileQuestions.length).toBe(originalCompileQuestions.length + 1)
     })
   })
 
 
-  describe(`${testUrl}/answer`, () => {
+/*   describe(`${testUrl}/answer`, () => {
     test('POST', async () => {
       const questions = await BaseQuestion.find({}).populate('question.item')
 
@@ -262,6 +258,7 @@ describe('question controller', () => {
       // Check that new answer entities are created
       const answers = await Answer.find()
       expect(answers.length).toBe(2)
+      console.log(token)
 
       // Check that user has been linked to their answers
       const user = await User.findOne()
@@ -281,8 +278,8 @@ describe('question controller', () => {
         .get(`${testUrl}/random`)
         .set('Authorization', `bearer ${ token }`)
       expect(response.body.message).toBeDefined()
-    }) */
-  //})
+    })
+  }) */
 })
 
 afterAll(() => {
