@@ -2,9 +2,7 @@ const jwt = require('jsonwebtoken')
 const mongoose = require('mongoose')
 const questionRouter = require('express').Router()
 const BaseQuestion = require('../models/baseQuestion')
-const PrintQuestion = require('../models/printQuestion')
 const GeneralQuestion = require('../models/generalQuestion')
-const CompileQuestion = require('../models/compileQuestion')
 const CorrectAnswer = require('../models/correctAnswer')
 const User = require('../models/user')
 const Answer = require('../models/answer')
@@ -19,7 +17,7 @@ questionRouter.get('/', async (req, res) => {
     const baseQuestions = await BaseQuestion.find()
       .populate('question.item')
       .populate({ path: 'group', populate: { path: 'course', model: 'Course' }, model: 'Group' })
-      .populate('correctAnswer')
+      .populate('correctAnswers')
     res.status(200).json(baseQuestions)
   } catch (e) {
     console.error('e', e)
@@ -54,14 +52,10 @@ questionRouter.delete('/:id', async (req, res) => {
     }
 
     // Remove the question that the base question includes
-    if (baseQuestion.type === 'compile') {
-      await CompileQuestion.findByIdAndRemove(baseQuestion.question.item)
-    } else {
-      await PrintQuestion.findByIdAndRemove(baseQuestion.question.item)
-    }
+    await GeneralQuestion.findByIdAndRemove(baseQuestion.question.item)
 
     // Remove the correct answer that the found question includes
-    await CorrectAnswer.findByIdAndRemove(baseQuestion.correctAnswer)
+    await CorrectAnswer.findByIdAndRemove(baseQuestion.correctAnswers)
 
     // Remove the link between users and the answers that are about to
     // be deleted. Array.forEach loop can't be used because it doesn't work
@@ -189,7 +183,7 @@ questionRouter.post('/', async (req, res) => {
   try {
     const {
       value,
-      correctAnswer,
+      correctAnswers,
       options,
       type,
       groupId,
@@ -197,7 +191,7 @@ questionRouter.post('/', async (req, res) => {
     } = req.body
 
     // Validate parameters
-    if (!(correctAnswer && options && groupId)) {
+    if (!(correctAnswers && options && groupId)) {
       return res.status(422).json({ error: 'some params missing' })
     }
 
@@ -221,22 +215,14 @@ questionRouter.post('/', async (req, res) => {
     }
 
     // Create a new CorrectAnswer entity and save it
-    const newCorrectAnswer = new CorrectAnswer({ value: correctAnswer })
+    const newCorrectAnswer = new CorrectAnswer({ value: correctAnswers })
     await newCorrectAnswer.save()
 
     // Create a new question entity and save it
     let newQuestion, kind
-    if (type === 'print') {
-      kind = 'PrintQuestion'
-      newQuestion = new PrintQuestion({ value, options: options.concat(correctAnswer) })
-      await newQuestion.save()
-    } else if (type === 'compile') {
-      kind = 'CompileQuestion'
-      newQuestion = new CompileQuestion({ options: options.concat(correctAnswer) })
-      await newQuestion.save()
-    } else if (type === 'general') {
+    if (type === 'general') {
       kind = 'GeneralQuestion'
-      newQuestion = new GeneralQuestion({ value, options: options.concat(correctAnswer) })
+      newQuestion = new GeneralQuestion({ value, options: options })
       await newQuestion.save()
     } else {
       return res.status(401).json({ error: 'no such question type!' })
@@ -246,7 +232,7 @@ questionRouter.post('/', async (req, res) => {
     const newBaseQuestion = new BaseQuestion({
       type,
       question: { kind, item: newQuestion._id },
-      correctAnswer: newCorrectAnswer._id,
+      correctAnswers: newCorrectAnswer._id,
       group: group._id,
       concepts: concepts
     })
@@ -288,7 +274,7 @@ questionRouter.post('/answer', async (req, res) => {
     }
 
     // Find the BaseQuestion entity that contains the answered question
-    const answeredQuestion = await BaseQuestion.findOne({ 'question.item': id }).populate('correctAnswer')
+    const answeredQuestion = await BaseQuestion.findOne({ 'question.item': id }).populate('correctAnswers')
 
     let isCorrect, answerQuality
 
@@ -298,7 +284,7 @@ questionRouter.post('/answer', async (req, res) => {
       answerQuality = 0
     } else {
       // Check if the received answer is correct
-      isCorrect = answer === answeredQuestion.correctAnswer.value
+      isCorrect = answeredQuestion.correctAnswers.value.includes(answer)
 
       // Set answer quality = 'how difficult the question was'
       // Currently users can't rate questions, so we need to use either 1 for false or 5 for correct
@@ -331,8 +317,8 @@ questionRouter.post('/answer', async (req, res) => {
     user.answers = user.answers.concat(userAnswer._id)
     await user.save()
 
-    // If the received answer was wrong, the response will contain the correct answer as well
-    res.status(200).json({ isCorrect, ...(!isCorrect && { correctAnswer: answeredQuestion.correctAnswer.value }) })
+    // If the received answer was wrong, the response will contain the correct answers as well
+    res.status(200).json({ isCorrect, ...(!isCorrect && { correctAnswer: answeredQuestion.correctAnswers.value }) })
   } catch (e) {
     console.error('e', e)
     res.status(500).json({ error: e.message })
