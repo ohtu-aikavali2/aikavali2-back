@@ -37,6 +37,7 @@ describe('question controller', () => {
     await BaseQuestion.deleteMany()
     await PrintQuestion.deleteMany()
     await CompileQuestion.deleteMany()
+    await GeneralQuestion.deleteMany()
     await CorrectAnswer.deleteMany()
     await Answer.deleteMany()
     await User.deleteMany()
@@ -51,32 +52,32 @@ describe('question controller', () => {
     const testConcepts = [new Concept({ name: 'for' }), new Concept({ name: 'if' })]
 
     // Create a CorrectAnswer
-    const newCorrectAnswer1 = new CorrectAnswer({ value: 'test' })
+    const newCorrectAnswer1 = new CorrectAnswer({ value: ['test'] })
     await newCorrectAnswer1.save()
 
     // Create a CorrectAnswer
-    const newCorrectAnswer2 = new CorrectAnswer({ value: 'test' })
+    const newCorrectAnswer2 = new CorrectAnswer({ value: ['test'] })
     await newCorrectAnswer2.save()
 
-    // Create a PrintQuestion
+    // Create a question
     const options = ['a', 'b', 'c']
-    const newPrintQuestion = new PrintQuestion({ value: 'test', options: options.concat('test'), type: 'print', groupId: testGroup._id })
-    await newPrintQuestion.save()
+    const newGeneralQuestion = new GeneralQuestion({ value: 'test', options: options.concat('test'), type: 'general', groupId: testGroup._id })
+    await newGeneralQuestion.save()
     const q1 = new BaseQuestion({
-      type: 'print',
-      question: { kind: 'PrintQuestion', item: newPrintQuestion._id },
-      correctAnswer: newCorrectAnswer1._id,
+      type: 'general',
+      question: { kind: 'GeneralQuestion', item: newGeneralQuestion._id },
+      correctAnswers: newCorrectAnswer1._id,
       concepts: testConcepts
     })
     await q1.save()
 
     // Create a CompileQuestion
-    const newCompileQuestion = new CompileQuestion({ options: options.concat('test') })
-    await newCompileQuestion.save()
+    const newGeneralQuestion2 = new GeneralQuestion({ value: 'test2', options: options.concat('test'), type: 'general', groupId: testGroup._id })
+    await newGeneralQuestion2.save()
     const q2 = new BaseQuestion({
-      type: 'compile',
-      question: { kind: 'CompileQuestion', item: newCompileQuestion._id, type: 'compile', groupId: testGroup._id },
-      correctAnswer: newCorrectAnswer2._id,
+      type: 'general',
+      question: { kind: 'GeneralQuestion', item: newGeneralQuestion2._id },
+      correctAnswers: newCorrectAnswer2._id,
       concepts: testConcepts
     })
     await q2.save()
@@ -97,7 +98,7 @@ describe('question controller', () => {
     })
   })
 
-  /*   describe(`${testUrl}/:id`, () => {
+  describe(`${testUrl}/:id`, () => {
     test('DELETE', async () => {
       jest.setTimeout(10000)
       // Get initial questions
@@ -126,22 +127,22 @@ describe('question controller', () => {
       expect(response.status).toBe(200)
       expect(response.body.message).toBe('deleted successfully!')
 
-      // Since the first question is of type print, check that
-      // there are no more questions of type print
-      const printQuestions = await getQuestionsOfType('print')
-      expect(printQuestions.length).toBe(0)
+      // Since the first question is of type general, check that
+      // there are no more questions of type general
+      const generalQuestions = await getQuestionsOfType('general')
+      expect(generalQuestions.length).toBe(1)
 
-      // Check that all answers relating to the
+      /*       // Check that all answers relating to the
       // removed question have been deleted
       const postAnswers = await Answer.find()
-      expect(postAnswers.length).toBe(1)
+      expect(postAnswers.length).toBe(1) */
 
-      // Check that the answers which are linked to the
+      /*       // Check that the answers which are linked to the
       // deleted question are removed from the user
       const user = await User.findOne()
-      expect(user.answers.length).toBe(1)
+      expect(user.answers.length).toBe(1) */
 
-      // Check that the correct answers thich are linked
+      // Check that the correct answers which are linked
       // to the deleted question are removed
       const correctAnswers = await CorrectAnswer.find()
       expect(correctAnswers.length).toBe(1)
@@ -163,9 +164,9 @@ describe('question controller', () => {
       expect(response.status).toBe(400)
       expect(response.body.error).toBe('malformed id')
     })
-  }) */
+  })
 
-  /*   describe(`${testUrl}/random`, () => {
+  describe(`${testUrl}/random`, () => {
     test('GET', async () => {
       // Check validation
       let response = await api
@@ -178,7 +179,7 @@ describe('question controller', () => {
         .set('Authorization', `bearer ${ token }`)
       expect(response.body.item.options.length).toBe(4)
     })
-  }) */
+  })
 
   describe(`${testUrl}`, () => {
     test('POST', async () => {

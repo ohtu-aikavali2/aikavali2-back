@@ -2,9 +2,7 @@ const jwt = require('jsonwebtoken')
 const mongoose = require('mongoose')
 const questionRouter = require('express').Router()
 const BaseQuestion = require('../models/baseQuestion')
-const PrintQuestion = require('../models/printQuestion')
 const GeneralQuestion = require('../models/generalQuestion')
-const CompileQuestion = require('../models/compileQuestion')
 const CorrectAnswer = require('../models/correctAnswer')
 const User = require('../models/user')
 const Answer = require('../models/answer')
@@ -54,14 +52,10 @@ questionRouter.delete('/:id', async (req, res) => {
     }
 
     // Remove the question that the base question includes
-    if (baseQuestion.type === 'compile') {
-      await CompileQuestion.findByIdAndRemove(baseQuestion.question.item)
-    } else {
-      await PrintQuestion.findByIdAndRemove(baseQuestion.question.item)
-    }
+    await GeneralQuestion.findByIdAndRemove(baseQuestion.question.item)
 
     // Remove the correct answer that the found question includes
-    await CorrectAnswer.findByIdAndRemove(baseQuestion.correctAnswer)
+    await CorrectAnswer.findByIdAndRemove(baseQuestion.correctAnswers)
 
     // Remove the link between users and the answers that are about to
     // be deleted. Array.forEach loop can't be used because it doesn't work
