@@ -185,6 +185,7 @@ questionRouter.post('/', async (req, res) => {
       value,
       correctAnswers,
       options,
+      selectCount,
       type,
       groupId,
       concepts
@@ -234,6 +235,7 @@ questionRouter.post('/', async (req, res) => {
       question: { kind, item: newQuestion._id },
       correctAnswers: newCorrectAnswer._id,
       group: group._id,
+      selectCount: selectCount,
       concepts: concepts
     })
     await newBaseQuestion.save()
@@ -275,7 +277,6 @@ questionRouter.post('/answer', async (req, res) => {
 
     // Find the BaseQuestion entity that contains the answered question
     const answeredQuestion = await BaseQuestion.findOne({ 'question.item': id }).populate('correctAnswers')
-
     let isCorrect, answerQuality
 
     // Check if the question skipped -> answer is false and quality is 0
@@ -284,7 +285,9 @@ questionRouter.post('/answer', async (req, res) => {
       answerQuality = 0
     } else {
       // Check if the received answer is correct
-      isCorrect = answeredQuestion.correctAnswers.value.includes(answer)
+      if (answeredQuestion.selectCount === 'selectOne') {
+        isCorrect = answeredQuestion.correctAnswers.value.includes(answer)
+      }
 
       // Set answer quality = 'how difficult the question was'
       // Currently users can't rate questions, so we need to use either 1 for false or 5 for correct

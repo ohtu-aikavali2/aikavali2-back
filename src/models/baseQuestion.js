@@ -8,6 +8,7 @@ const baseQuestionSchema = new mongoose.Schema({
   },
   correctAnswers: { type: mongoose.Schema.Types.ObjectId, ref: 'CorrectAnswer' },
   group: { type: mongoose.Schema.Types.ObjectId, ref: 'Group' },
+  selectCount: String,
   flags: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Flag' }],
   recentFlag: { type: mongoose.Schema.Types.Date, default: null },
   reviews: [{ type: mongoose.Schema.Types.ObjectId, ref: 'QuestionReview' }],
