@@ -287,6 +287,9 @@ questionRouter.post('/answer', async (req, res) => {
       // Check if the received answer is correct
       if (answeredQuestion.selectCount === 'selectOne') {
         isCorrect = answeredQuestion.correctAnswers.value.includes(answer)
+      } else if (answeredQuestion.selectCount === 'selectMany') {
+        console.log('Not supported yet')
+        isCorrect = false
       }
 
       // Set answer quality = 'how difficult the question was'
