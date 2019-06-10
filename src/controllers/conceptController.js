@@ -1,6 +1,8 @@
 // const mongoose = require('mongoose')
 const conceptRouter = require('express').Router()
 const Concept = require('../models/concept')
+const jwt = require('jsonwebtoken')
+const User = require('../models/user.js')
 
 conceptRouter.get('/', async (req, res) => {
   try {
@@ -15,13 +17,19 @@ conceptRouter.get('/', async (req, res) => {
 
 conceptRouter.post('/', async (req, res) => {
   try {
-    const { name, course } = req.body
-    const newConcept = new Concept({ name, course })
+    const { name, course, token } = req.body
+    const { userId } = jwt.verify(token, process.env.SECRET)
+    const user = await User.findById(userId)
 
+    if(!user) {
+      return res.status(404).json({ error: 'Invalid token!' })
+    }
     // Check that name is included and not empty
     if (!name || name === '') {
       return res.status(422).json({ error: 'params missing' })
     }
+
+    const newConcept = new Concept({ name, course, user })
 
     await newConcept.save()
 
