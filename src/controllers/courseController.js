@@ -35,14 +35,14 @@ courseRouter.post('/', async (req, res) => {
       return res.status(401).json({ error: 'token missing' })
     }
     const { userId } = jwt.verify(token, process.env.SECRET)
-    const foundUser = await User.findById(userId)
-    if (!foundUser.administrator) {
+    const user = await User.findById(userId)
+    if (!user) {
       return res.status(403).json({ error: 'Unauthorized' })
     }
     if (!name) {
       return res.status(422).json({ error: 'course name missing' })
     }
-    const newCourse = new Course({ name, imageSrc, description })
+    const newCourse = new Course({ name, imageSrc, description, user })
     await newCourse.save()
     res.status(201).json(newCourse)
   } catch (e) {
