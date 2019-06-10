@@ -223,7 +223,7 @@ questionRouter.post('/', async (req, res) => {
     let newQuestion, kind
     if (type === 'general') {
       kind = 'GeneralQuestion'
-      newQuestion = new GeneralQuestion({ value, options: options })
+      newQuestion = new GeneralQuestion({ value, options: options, selectCount })
       await newQuestion.save()
     } else {
       return res.status(401).json({ error: 'no such question type!' })
@@ -235,7 +235,6 @@ questionRouter.post('/', async (req, res) => {
       question: { kind, item: newQuestion._id },
       correctAnswers: newCorrectAnswer._id,
       group: group._id,
-      selectCount: selectCount,
       concepts: concepts
     })
     await newBaseQuestion.save()
