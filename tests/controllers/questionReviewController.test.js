@@ -38,7 +38,7 @@ describe('question review controller', () => {
     baseQuestion = new BaseQuestion({
       type: 'print',
       question: { kind: 'PrintQuestion', item: question._id },
-      correctAnswer: mongoose.Types.ObjectId()
+      correctAnswer: [mongoose.Types.ObjectId()]
     })
     await baseQuestion.save()
     const user = await User.findOne()
@@ -52,7 +52,7 @@ describe('question review controller', () => {
       let response = await api
         .post(testUrl)
         .send({ review: '1', questionId: baseQuestion._id })
-        .set('Authorization', `bearer ${ token }`)
+        .set('Authorization', `bearer ${token}`)
       expect(response.status).toBe(201)
       expect(response.body.message).toBe('Review submitted successfully')
 
@@ -60,14 +60,14 @@ describe('question review controller', () => {
       response = await api
         .post(testUrl)
         .send({ review: '1' })
-        .set('Authorization', `bearer ${ token }`)
+        .set('Authorization', `bearer ${token}`)
       expect(response.status).toBe(422)
       expect(response.body.error).toBe('Some params missing')
 
       response = await api
         .post(testUrl)
         .send({ questionId: baseQuestion._id })
-        .set('Authorization', `bearer ${ token }`)
+        .set('Authorization', `bearer ${token}`)
       expect(response.status).toBe(422)
       expect(response.body.error).toBe('Some params missing')
 
@@ -80,7 +80,7 @@ describe('question review controller', () => {
       response = await api
         .post(testUrl)
         .send({ review: '1', questionId: '123' })
-        .set('Authorization', `bearer ${ token }`)
+        .set('Authorization', `bearer ${token}`)
       expect(response.status).toBe(400)
       expect(response.body.error).toBe('malformed id')
 
@@ -88,7 +88,7 @@ describe('question review controller', () => {
       const temporaryQuestion = new BaseQuestion({
         type: 'print',
         question: { kind: 'PrintQuestion', item: question._id },
-        correctAnswer: mongoose.Types.ObjectId()
+        correctAnswer: [mongoose.Types.ObjectId()]
       })
       await temporaryQuestion.save()
       await BaseQuestion.deleteOne({ _id: temporaryQuestion._id })
@@ -96,7 +96,7 @@ describe('question review controller', () => {
       response = await api
         .post(testUrl)
         .send({ review: '1', questionId: temporaryQuestion._id })
-        .set('Authorization', `bearer ${ token }`)
+        .set('Authorization', `bearer ${token}`)
       expect(response.status).toBe(404)
       expect(response.body.error).toBe('basequestion not found')
     })
