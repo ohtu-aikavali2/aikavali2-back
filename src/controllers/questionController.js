@@ -185,6 +185,7 @@ questionRouter.post('/', async (req, res) => {
       value,
       correctAnswers,
       options,
+      selectCount,
       type,
       groupId,
       concepts
@@ -222,7 +223,7 @@ questionRouter.post('/', async (req, res) => {
     let newQuestion, kind
     if (type === 'general') {
       kind = 'GeneralQuestion'
-      newQuestion = new GeneralQuestion({ value, options: options })
+      newQuestion = new GeneralQuestion({ value, options: options, selectCount })
       await newQuestion.save()
     } else {
       return res.status(401).json({ error: 'no such question type!' })
@@ -274,8 +275,7 @@ questionRouter.post('/answer', async (req, res) => {
     }
 
     // Find the BaseQuestion entity that contains the answered question
-    const answeredQuestion = await BaseQuestion.findOne({ 'question.item': id }).populate('correctAnswers')
-
+    const answeredQuestion = await BaseQuestion.findOne({ 'question.item': id }).populate('correctAnswers').populate('question.item')
     let isCorrect, answerQuality
 
     // Check if the question skipped -> answer is false and quality is 0
@@ -283,8 +283,30 @@ questionRouter.post('/answer', async (req, res) => {
       isCorrect = false
       answerQuality = 0
     } else {
+      const answerValue = answer.map(answer => answer.value)
       // Check if the received answer is correct
-      isCorrect = answeredQuestion.correctAnswers.value.includes(answer)
+      if (answeredQuestion.question.item.selectCount === 'selectOne') {
+        //console.log('selectone')
+        isCorrect = answeredQuestion.correctAnswers.value.includes(answerValue[0])
+      } else if (answeredQuestion.question.item.selectCount === 'selectMany') {
+        //console.log('selectMany')
+        isCorrect = true
+
+        for (let i = 0; i < answerValue.length; i++) {
+          //console.log(answerValue[i], ' is in ', answeredQuestion.correctAnswers.value, answeredQuestion.correctAnswers.value.includes(answerValue[i]))
+          if (!answeredQuestion.correctAnswers.value.includes(answerValue[i])) {
+            isCorrect = false
+          }
+        }
+
+        for (let i = 0; i < answeredQuestion.correctAnswers.value.length; i++) {
+          //console.log(answeredQuestion.correctAnswers.value[i], ' is in ', answerValue, answerValue.includes(answeredQuestion.correctAnswers.value[i]))
+          if (!answerValue.includes(answeredQuestion.correctAnswers.value[i])) {
+            isCorrect = false
+          }
+        }
+
+      }
 
       // Set answer quality = 'how difficult the question was'
       // Currently users can't rate questions, so we need to use either 1 for false or 5 for correct
@@ -318,7 +340,7 @@ questionRouter.post('/answer', async (req, res) => {
     await user.save()
 
     // If the received answer was wrong, the response will contain the correct answers as well
-    res.status(200).json({ isCorrect, ...(!isCorrect && { correctAnswer: answeredQuestion.correctAnswers.value }) })
+    res.status(200).json({ isCorrect, ...({ correctAnswer: answeredQuestion.correctAnswers.value }) })
   } catch (e) {
     console.error('e', e)
     res.status(500).json({ error: e.message })
