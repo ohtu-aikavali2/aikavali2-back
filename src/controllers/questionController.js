@@ -254,10 +254,6 @@ questionRouter.post('/answer', async (req, res) => {
   try {
     const { id, answer, token, time } = req.body
 
-    const answerValue = answer.map(answer => answer.value)
-
-    console.log('valitut vastaukset', answerValue)
-
     // Validate id and given parameters
     if (!mongoose.Types.ObjectId.isValid(id)) {
       return res.status(400).json({ error: 'malformed id' })
@@ -287,6 +283,7 @@ questionRouter.post('/answer', async (req, res) => {
       isCorrect = false
       answerQuality = 0
     } else {
+      const answerValue = answer.map(answer => answer.value)
       // Check if the received answer is correct
       if (answeredQuestion.question.item.selectCount === 'selectOne') {
         //console.log('selectone')
