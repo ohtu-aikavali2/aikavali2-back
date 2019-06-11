@@ -143,11 +143,14 @@ questionRouter.get('/random', async (req, res) => {
 
     // If course is set, then get questions
     // from that specific course
+    console.log('----course:   ', course)
+    console.log('1. ', baseQuestions.length)
     if (course) {
       baseQuestions = baseQuestions.filter((question) => {
+        console.log('----question.group.course._id.toString() === course.toString():   ', question.group.course._id.toString() === course.toString())
         if (question.group && question.group.course) {
           // Filter by deleted aswell
-          return (question.group.course.name === course) && !question.deleted
+          return (question.group.course._id.toString() === course.toString()) && !question.deleted
         }
         return false
       })
@@ -156,6 +159,7 @@ questionRouter.get('/random', async (req, res) => {
       baseQuestions = baseQuestions.filter(q => !q.deleted)
     }
 
+    console.log('2. ', baseQuestions.length)
     // No such questions left
     if (baseQuestions.length === 0) {
       return res.status(200).json({ message: 'Ei enempää kysymyksiä tällä hetkellä!' })
