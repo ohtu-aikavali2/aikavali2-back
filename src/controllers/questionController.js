@@ -254,6 +254,10 @@ questionRouter.post('/answer', async (req, res) => {
   try {
     const { id, answer, token, time } = req.body
 
+    const answerValue = answer.map(answer => answer.value)
+
+    console.log('valitut vastaukset', answerValue)
+
     // Validate id and given parameters
     if (!mongoose.Types.ObjectId.isValid(id)) {
       return res.status(400).json({ error: 'malformed id' })
@@ -275,7 +279,7 @@ questionRouter.post('/answer', async (req, res) => {
     }
 
     // Find the BaseQuestion entity that contains the answered question
-    const answeredQuestion = await BaseQuestion.findOne({ 'question.item': id }).populate('correctAnswers')
+    const answeredQuestion = await BaseQuestion.findOne({ 'question.item': id }).populate('correctAnswers').populate('question.item')
     let isCorrect, answerQuality
 
     // Check if the question skipped -> answer is false and quality is 0
@@ -284,11 +288,27 @@ questionRouter.post('/answer', async (req, res) => {
       answerQuality = 0
     } else {
       // Check if the received answer is correct
-      if (answeredQuestion.selectCount === 'selectOne') {
-        isCorrect = answeredQuestion.correctAnswers.value.includes(answer)
-      } else if (answeredQuestion.selectCount === 'selectMany') {
-        console.log('Not supported yet')
-        isCorrect = false
+      if (answeredQuestion.question.item.selectCount === 'selectOne') {
+        //console.log('selectone')
+        isCorrect = answeredQuestion.correctAnswers.value.includes(answerValue[0])
+      } else if (answeredQuestion.question.item.selectCount === 'selectMany') {
+        //console.log('selectMany')
+        isCorrect = true
+
+        for (let i = 0; i < answerValue.length; i++) {
+          //console.log(answerValue[i], ' is in ', answeredQuestion.correctAnswers.value, answeredQuestion.correctAnswers.value.includes(answerValue[i]))
+          if (!answeredQuestion.correctAnswers.value.includes(answerValue[i])) {
+            isCorrect = false
+          }
+        }
+
+        for (let i = 0; i < answeredQuestion.correctAnswers.value.length; i++) {
+          //console.log(answeredQuestion.correctAnswers.value[i], ' is in ', answerValue, answerValue.includes(answeredQuestion.correctAnswers.value[i]))
+          if (!answerValue.includes(answeredQuestion.correctAnswers.value[i])) {
+            isCorrect = false
+          }
+        }
+
       }
 
       // Set answer quality = 'how difficult the question was'
