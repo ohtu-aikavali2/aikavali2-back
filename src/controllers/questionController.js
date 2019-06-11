@@ -143,11 +143,8 @@ questionRouter.get('/random', async (req, res) => {
 
     // If course is set, then get questions
     // from that specific course
-    console.log('----course:   ', course)
-    console.log('1. ', baseQuestions.length)
     if (course) {
       baseQuestions = baseQuestions.filter((question) => {
-        console.log('----question.group.course._id.toString() === course.toString():   ', question.group.course._id.toString() === course.toString())
         if (question.group && question.group.course) {
           // Filter by deleted aswell
           return (question.group.course._id.toString() === course.toString()) && !question.deleted
@@ -290,10 +287,8 @@ questionRouter.post('/answer', async (req, res) => {
       const answerValue = answer.map(answer => answer.value)
       // Check if the received answer is correct
       if (answeredQuestion.question.item.selectCount === 'selectOne') {
-        //console.log('selectone')
         isCorrect = answeredQuestion.correctAnswers.value.includes(answerValue[0])
       } else if (answeredQuestion.question.item.selectCount === 'selectMany') {
-        //console.log('selectMany')
         isCorrect = true
 
         for (let i = 0; i < answerValue.length; i++) {
