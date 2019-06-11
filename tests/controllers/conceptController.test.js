@@ -63,6 +63,34 @@ describe('concept controller', () => {
 
     })
   })
+
+  describe(`${testUrl}/:id`, () => {
+    test('DELETE', async () => {
+      //get current concepts
+      const conceptsBefore = await Concept.find({})
+      expect(conceptsBefore.length).toBe(2)
+
+      //delete one concept
+      let response = await api
+        .delete(`${testUrl}/${conceptsBefore[0]._id}`)
+        .set('Authorization', `bearer ${ token }`)
+      expect(response.status).toBe(200)
+      expect(response.body.message).toBe('deleted successfully!')
+
+      //test validation
+      response = await api
+        .delete(`${testUrl}/${conceptsBefore[1]._id}`)
+        .set('Authorization', 'bearer')
+      expect(response.status).toBe(401)
+      expect(response.body.error).toBe('token missing')
+
+      //check that one concept has been deleted
+      const conceptsAfter = await Concept.find({})
+      expect(conceptsAfter.length).toBe(1)
+
+    })
+  })
+
 })
 
 afterAll(() => {
