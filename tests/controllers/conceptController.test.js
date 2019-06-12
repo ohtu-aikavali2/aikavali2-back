@@ -75,7 +75,7 @@ describe('concept controller', () => {
         .delete(`${testUrl}/${conceptsBefore[0]._id}`)
         .set('Authorization', `bearer ${ token }`)
       expect(response.status).toBe(403)
-      expect(response.body.message).toBe('Unauthorized')
+      expect(response.body.error).toBe('Unauthorized')
 
       //test validation
       response = await api
