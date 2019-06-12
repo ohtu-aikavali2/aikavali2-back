@@ -6,7 +6,7 @@ const courseSchema = new mongoose.Schema({
   imageSrc: mongoose.Schema.Types.String,
   description: mongoose.Schema.Types.String,
   concepts: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Concept' }],
-  user: { type: mongoose.Schema.Types.ObjectId, ref: 'User' }
+  user: { type: mongoose.Schema.Types.Number, ref: 'User' }
 })
 
 const Course = mongoose.model('Course', courseSchema)
