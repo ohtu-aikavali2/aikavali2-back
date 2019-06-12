@@ -16,7 +16,7 @@ courseRouter.get('/', async (req, res) => {
 courseRouter.get('/:id', async (req, res) => {
   try {
     const { id } = req.params
-    const course = await Course.findOne({ id }).populate('groups').populate('concepts')
+    const course = await Course.findOne({ _id: id }).populate('groups').populate('concepts')
     if (!course) {
       return res.status(404).json({ error: 'course not found' })
     }
