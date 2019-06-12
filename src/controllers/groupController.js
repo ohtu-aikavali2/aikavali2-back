@@ -24,7 +24,7 @@ groupRouter.post('/', async (req, res) => {
     }
     const { userId } = jwt.verify(token, process.env.SECRET)
     const foundUser = await User.findById(userId)
-    if (!foundUser.administrator) {
+    if (!foundUser) {
       return res.status(403).json({ error: 'Unauthorized' })
     }
     if (!(name && courseId)) {
