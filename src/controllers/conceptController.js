@@ -1,6 +1,7 @@
 // const mongoose = require('mongoose')
 const conceptRouter = require('express').Router()
 const Concept = require('../models/concept')
+const Course = require('../models/course')
 const jwt = require('jsonwebtoken')
 const User = require('../models/user.js')
 
@@ -43,6 +44,8 @@ conceptRouter.delete('/:id', async (req, res) => {
   try {
     const { id } = req.params
     const { token } = req.body
+
+    console.log('poistetaan', id)
     //Verify user rights
     if (!token) {
       return res.status(401).json({ error: 'token missing' })
@@ -54,6 +57,17 @@ conceptRouter.delete('/:id', async (req, res) => {
     if (!foundUser.administrator) {
       return res.status(403).json({ error: 'Unauthorized' })
     }
+
+    //Find the concept to be deleted 
+    const concept = await Concept.findById(id)
+
+    const course = await Course.findById(concept.course)
+    console.log('ennen',course.concepts)
+    course.concepts = course.concepts.filter( conceptId => !conceptId.equals(id) )
+    console.log('jälkeen', course.concepts)
+
+    await course.save()
+    
     await Concept.findByIdAndRemove(id)
 
     res.status(200).json({ message: 'deleted successfully!' })
