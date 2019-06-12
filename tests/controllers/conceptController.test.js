@@ -2,12 +2,14 @@ const supertest = require('supertest')
 const { app, server, apiUrl } = require('../../src/server')
 const api = supertest(app)
 const Concept = require('../../src/models/concept')
+const Course = require('../../src/models/course')
 const User = require('../../src/models/user')
 const testUrl = `${apiUrl}/concepts`
 
 describe('concept controller', () => {
   let token
   let user
+  let courseObject
 
   beforeEach(async () => {
     //Remove all DB entities
@@ -20,6 +22,10 @@ describe('concept controller', () => {
     token = response.body.token
 
     user = await User.findOne()
+
+    //Create a new course
+    courseObject = new Course({ name: 'testCourse' })
+    await courseObject.save()
 
     //Create some concepts
     const concept1 = new Concept({ name: 'for-loop', user })
@@ -41,7 +47,7 @@ describe('concept controller', () => {
       //A new concept is created
       let response = await api
         .post(testUrl)
-        .send({ name:'new', user: user.id })
+        .send({ name:'new', user: user.id, course: courseObject._id })
         .set('Authorization', `bearer ${ token }`)
       expect(response.status).toBe(201)
       expect(response.body.name).toBe('new')

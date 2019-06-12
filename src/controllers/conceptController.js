@@ -21,7 +21,6 @@ conceptRouter.post('/', async (req, res) => {
     const { name, course, token } = req.body
     const { userId } = jwt.verify(token, process.env.SECRET)
     const user = await User.findById(userId)
-
     if(!user) {
       return res.status(404).json({ error: 'Invalid token!' })
     }
@@ -30,7 +29,15 @@ conceptRouter.post('/', async (req, res) => {
       return res.status(422).json({ error: 'params missing' })
     }
 
+    //Create a new concept
     const newConcept = new Concept({ name, course, user })
+
+    //Find the course to which the concept is added to
+    const courseObject = await Course.findById(course)
+    //Update the concepts in the course
+    courseObject.concepts = courseObject.concepts.concat(newConcept._id)
+
+    await courseObject.save()
 
     await newConcept.save()
 
@@ -45,7 +52,6 @@ conceptRouter.delete('/:id', async (req, res) => {
     const { id } = req.params
     const { token } = req.body
 
-    console.log('poistetaan', id)
     //Verify user rights
     if (!token) {
       return res.status(401).json({ error: 'token missing' })
@@ -58,16 +64,15 @@ conceptRouter.delete('/:id', async (req, res) => {
       return res.status(403).json({ error: 'Unauthorized' })
     }
 
-    //Find the concept to be deleted 
+    //Find the concept to be deleted
     const concept = await Concept.findById(id)
 
+    //Find the course to which the concept is connected to and update the course
     const course = await Course.findById(concept.course)
-    console.log('ennen',course.concepts)
     course.concepts = course.concepts.filter( conceptId => !conceptId.equals(id) )
-    console.log('jälkeen', course.concepts)
 
     await course.save()
-    
+
     await Concept.findByIdAndRemove(id)
 
     res.status(200).json({ message: 'deleted successfully!' })
