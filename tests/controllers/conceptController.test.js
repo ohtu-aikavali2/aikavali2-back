@@ -70,12 +70,12 @@ describe('concept controller', () => {
       const conceptsBefore = await Concept.find({})
       expect(conceptsBefore.length).toBe(2)
 
-      //delete one concept
+      //Non admin cannot delete a concept
       let response = await api
         .delete(`${testUrl}/${conceptsBefore[0]._id}`)
         .set('Authorization', `bearer ${ token }`)
-      expect(response.status).toBe(200)
-      expect(response.body.message).toBe('deleted successfully!')
+      expect(response.status).toBe(403)
+      expect(response.body.message).toBe('Unauthorized')
 
       //test validation
       response = await api
@@ -86,7 +86,7 @@ describe('concept controller', () => {
 
       //check that one concept has been deleted
       const conceptsAfter = await Concept.find({})
-      expect(conceptsAfter.length).toBe(1)
+      expect(conceptsAfter.length).toBe(2)
 
     })
   })

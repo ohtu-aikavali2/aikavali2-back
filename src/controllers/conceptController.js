@@ -49,11 +49,11 @@ conceptRouter.delete('/:id', async (req, res) => {
     }
 
     //Validate that admin is deleting
-    /*     const { userId } = jwt.verify(token, process.env.SECRET)
+    const { userId } = jwt.verify(token, process.env.SECRET)
     const foundUser = await User.findById(userId)
     if (!foundUser.administrator) {
-      return res.status(403).json({ error: 'Unauthorized '})
-    } */
+      return res.status(403).json({ error: 'Unauthorized' })
+    }
     await Concept.findByIdAndRemove(id)
 
     res.status(200).json({ message: 'deleted successfully!' })
