@@ -40,7 +40,7 @@ describe('course controller', () => {
       let response = await api
         .post(testUrl)
         .send({ name: 'new' })
-        .set('Authorization', `bearer ${ token }`)
+        .set('Authorization', `bearer ${token}`)
       expect(response.status).toBe(201)
       expect(response.body.name).toBe('new')
       const foundCourse = await Course.find({ name: 'new' })
@@ -50,27 +50,27 @@ describe('course controller', () => {
       response = await api
         .post(testUrl)
         .send({})
-        .set('Authorization', `bearer ${ token }`)
+        .set('Authorization', `bearer ${token}`)
       expect(response.status).toBe(422)
       expect(response.body.error).toBe('course name missing')
     })
   })
 
-  describe(`${apiUrl}/:name`, async () => {
-    test('GET', async () => {
-      // Check that a course can be found by its name
-      let response = await api
-        .get(`${testUrl}/test1`)
-      expect(response.status).toBe(200)
-      expect(response.body.name).toBe('test1')
+  // describe(`${apiUrl}/:name`, async () => {
+  //   test('GET', async () => {
+  //     // Check that a course can be found by its name
+  //     let response = await api
+  //       .get(`${testUrl}/test1`)
+  //     expect(response.status).toBe(200)
+  //     expect(response.body.name).toBe('test1')
 
-      // Check that a course which doesn't exist won't be returned
-      response = await api
-        .get(`${testUrl}/none`)
-      expect(response.status).toBe(404)
-      expect(response.body.error).toBe('course not found')
-    })
-  })
+  //     // Check that a course which doesn't exist won't be returned
+  //     response = await api
+  //       .get(`${testUrl}/none`)
+  //     expect(response.status).toBe(404)
+  //     expect(response.body.error).toBe('course not found')
+  //   })
+  // })
 })
 
 afterAll(() => {
