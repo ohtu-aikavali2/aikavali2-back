@@ -1,4 +1,5 @@
 const supertest = require('supertest')
+var mongoose = require('mongoose')
 const { app, server, apiUrl } = require('../../src/server')
 const api = supertest(app)
 const Course = require('../../src/models/course')
@@ -23,7 +24,6 @@ describe('course controller', () => {
     const response = await api
       .post(`${apiUrl}/user/generate`)
     token = response.body.token
-    await User.updateOne({ _id: response.body.id }, { administrator: true })
   })
 
   describe(`${apiUrl}/`, () => {
@@ -56,21 +56,25 @@ describe('course controller', () => {
     })
   })
 
-  // describe(`${apiUrl}/:name`, async () => {
-  //   test('GET', async () => {
-  //     // Check that a course can be found by its name
-  //     let response = await api
-  //       .get(`${testUrl}/test1`)
-  //     expect(response.status).toBe(200)
-  //     expect(response.body.name).toBe('test1')
+  describe(`${apiUrl}/:id`, async () => {
+    test('GET', async () => {
+      // Check that a course can be found by its id
+      const course = await Course.findOne({ name: 'test1' })
+      const id = course._id
+      let response = await api
+        .get(`${testUrl}/${id}`)
+      expect(response.status).toBe(200)
+      expect(response.body.name).toBe('test1')
 
-  //     // Check that a course which doesn't exist won't be returned
-  //     response = await api
-  //       .get(`${testUrl}/none`)
-  //     expect(response.status).toBe(404)
-  //     expect(response.body.error).toBe('course not found')
-  //   })
-  // })
+      // Check that a course which doesn't exist won't be returned
+      const fakeId = mongoose.Types.ObjectId()
+      response = await api
+        .get(`${testUrl}/${fakeId}`)
+      expect(response.status).toBe(404)
+      expect(response.body.error).toBe('course not found')
+    })
+  })
+
 })
 
 afterAll(() => {
