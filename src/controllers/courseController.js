@@ -60,10 +60,14 @@ courseRouter.patch('/:id', async (req, res) => {
     }
     const { userId } = jwt.verify(token, process.env.SECRET)
     const foundUser = await User.findById(userId)
-    if (!foundUser) {
+
+    const { id } = req.params
+    const course = await Course.findById(id)
+
+    if (!foundUser.administrator && course.user !== userId) {
       return res.status(403).json({ error: 'Unauthorized' })
     }
-    const { id } = req.params
+
     const updatedCourse = await Course.findOneAndUpdate({ _id: id }, { ...attributes }, { new: true })
     res.status(200).json(updatedCourse)
   } catch (e) {
