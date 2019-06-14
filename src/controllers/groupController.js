@@ -22,11 +22,6 @@ groupRouter.post('/', async (req, res) => {
     if (!token) {
       return res.status(401).json({ error: 'token missing' })
     }
-    const { userId } = jwt.verify(token, process.env.SECRET)
-    const foundUser = await User.findById(userId)
-    if (!foundUser) {
-      return res.status(403).json({ error: 'Unauthorized' })
-    }
     if (!(name && courseId)) {
       return res.status(422).json({ error: 'some params missing' })
     }
@@ -35,7 +30,14 @@ groupRouter.post('/', async (req, res) => {
       return res.status(400).json({ error: 'malformed course id' })
     }
 
+    const { userId } = jwt.verify(token, process.env.SECRET)
+    const foundUser = await User.findById(userId)
     const course = await Course.findById(courseId)
+
+    if (!foundUser.administrator && course.user !== userId) {
+      return res.status(403).json({ error: 'Unauthorized' })
+    }
+
     if (!course) {
       return res.status(404).json({ error: 'course not found' })
     }
