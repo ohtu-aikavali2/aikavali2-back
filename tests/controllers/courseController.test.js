@@ -8,22 +8,29 @@ const testUrl = `${apiUrl}/courses`
 
 describe('course controller', () => {
   let token
+  let adminToken
 
   beforeEach(async () => {
     // Remove all DB entities
     await Course.deleteMany()
     await User.deleteMany()
 
-    // Create some test courses
+    // Create some test courses and an admin and a non-admin
     const course1 = new Course({ name: 'test1' })
     await course1.save()
-    const course2 = new Course({ name: 'test2' })
-    await course2.save()
 
-    // Generate a token
-    const response = await api
+    let response = await api
       .post(`${apiUrl}/user/generate`)
     token = response.body.token
+
+    const course2 = new Course({ name: 'test2', user: response.body.id })
+    await course2.save()
+
+    response = await api
+      .post(`${apiUrl}/user/generate`)
+    adminToken = response.body.token
+    await User.updateOne({ _id: response.body.id }, { administrator: true })
+
   })
 
   describe(`${apiUrl}/`, () => {
@@ -72,6 +79,39 @@ describe('course controller', () => {
         .get(`${testUrl}/${fakeId}`)
       expect(response.status).toBe(404)
       expect(response.body.error).toBe('course not found')
+    })
+
+    test('PATCH', async () => {
+      const course1 = await Course.findOne({ name: 'test1' })
+      const id = course1._id
+
+      // A user that didn't create the course cannot edit it
+      let response = await api
+        .patch(`${testUrl}/${id}`)
+        .send({ name: 'changed' })
+        .set('Authorization', `bearer ${token}`)
+      expect(response.status).toBe(403)
+      expect(response.body.error).toBe('Unauthorized')
+
+      // An admin can edit a course created by someone else
+      response = await api
+        .patch(`${testUrl}/${id}`)
+        .send({ name: 'changed' })
+        .set('Authorization', `bearer ${adminToken}`)
+      expect(response.status).toBe(200)
+      expect(response.body.name).toBe('changed')
+
+      const course2 = await Course.findOne({ name: 'test2' })
+      const id2 = course2._id
+
+      // A user can edit a course they created
+      response = await api
+        .patch(`${testUrl}/${id2}`)
+        .send({ name: 'changed' })
+        .set('Authorization', `bearer ${token}`)
+      expect(response.status).toBe(200)
+      expect(response.body.name).toBe('changed')
+
     })
   })
 
