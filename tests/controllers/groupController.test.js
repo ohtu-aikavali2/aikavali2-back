@@ -8,7 +8,9 @@ const testUrl = `${apiUrl}/groups`
 
 describe('group controller', () => {
   let course
+  let course2
   let token
+  let adminToken
 
   beforeEach(async () => {
     // Remove all DB entities
@@ -16,21 +18,27 @@ describe('group controller', () => {
     await Group.deleteMany()
     await User.deleteMany()
 
-    // Create some test courses
-    course = new Course({ name: 'test' })
+    // Generate an admin token and a regular user token and some courses
+    let response = await api
+      .post(`${apiUrl}/user/generate`)
+    token = response.body.token
+
+    course = new Course({ name: 'test', user: response.body.id })
     await course.save()
+
+    response = await api
+      .post(`${apiUrl}/user/generate`)
+    adminToken = response.body.token
+    await User.updateOne({ _id: response.body.id }, { administrator: true })
+
+    course2 = new Course({ name: 'test2', user: response.body.id })
+    await course2.save()
 
     // Create some test groups
     const group1 = new Group({ name: 'group1', courseId: course._id })
     const group2 = new Group({ name: 'group2', courseId: course._id })
     await group1.save()
     await group2.save()
-
-    // Generate a token
-    const response = await api
-      .post(`${apiUrl}/user/generate`)
-    token = response.body.token
-    await User.updateOne({ _id: response.body.id }, { administrator: true })
   })
 
   describe('/', () => {
@@ -43,20 +51,8 @@ describe('group controller', () => {
     })
 
     test('POST', async () => {
-      // Check that a new group can be created
-      let response = await api
-        .post(testUrl)
-        .send({ name: 'test', courseId: course._id })
-        .set('Authorization', `bearer ${ token }`)
-      expect(response.status).toBe(201)
-      expect(response.body.name).toBe('test')
-      const foundGroup = await Group.findOne({ name: 'test' })
-      expect(foundGroup).toBeDefined()
-      const updatedCourse = await Course.findById(course._id)
-      expect(updatedCourse.groups.length).toBe(1)
-
       // Check validation
-      response = await api
+      let response = await api
         .post(testUrl)
         .send({ name: 'test' })
         .set('Authorization', `bearer ${ token }`)
@@ -83,6 +79,38 @@ describe('group controller', () => {
         .set('Authorization', `bearer ${ token }`)
       expect(response.status).toBe(400)
       expect(response.body.error).toBe('malformed course id')
+
+      // Admin can always add groups to courses
+      response = await api
+        .post(testUrl)
+        .send({ name: 'test', courseId: course._id })
+        .set('Authorization', `bearer ${ adminToken }`)
+      expect(response.status).toBe(201)
+      expect(response.body.name).toBe('test')
+      const foundGroup = await Group.findOne({ name: 'test' })
+      expect(foundGroup).toBeDefined()
+      const updatedCourse = await Course.findById(course._id)
+      expect(updatedCourse.groups.length).toBe(1)
+
+      // A User can add groups to a course created by them
+      response = await api
+        .post(testUrl)
+        .send({ name: 'newGroup', courseId: course._id })
+        .set('Authorization', `bearer ${ token }`)
+      expect(response.status).toBe(201)
+      expect(response.body.name).toBe('newGroup')
+      const foundGroup2 = await Group.findOne({ name: 'newGroup' })
+      expect(foundGroup2).toBeDefined()
+      const updatedCourse2 = await Course.findById(course._id)
+      expect(updatedCourse2.groups.length).toBe(2)
+
+      // A user cannot add groups to a course created by someone else
+      response = await api
+        .post(testUrl)
+        .send({ name: 'newGroup', courseId: course2._id })
+        .set('Authorization', `bearer ${ token }`)
+      expect(response.status).toBe(403)
+      expect(response.body.error).toBe('Unauthorized')
 
       // Check that a group can't be created for an undefined course
       const temporaryCourse = new Course({ name: 'temporary' })

@@ -34,13 +34,14 @@ groupRouter.post('/', async (req, res) => {
     const foundUser = await User.findById(userId)
     const course = await Course.findById(courseId)
 
+    if (!course) {
+      return res.status(404).json({ error: 'course not found' })
+    }
+
     if (!foundUser.administrator && course.user !== userId) {
       return res.status(403).json({ error: 'Unauthorized' })
     }
 
-    if (!course) {
-      return res.status(404).json({ error: 'course not found' })
-    }
     const newGroup = new Group({ name, course: course._id })
     await newGroup.save()
     course.groups = course.groups.concat(newGroup._id)
