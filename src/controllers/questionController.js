@@ -291,27 +291,27 @@ questionRouter.post('/answer', async (req, res) => {
     const answeredQuestion = await BaseQuestion.findOne({ 'question.item': id }).populate('correctAnswers').populate('question.item')
     let isCorrect, answerQuality
 
+    // Check if the question is correct based on its type and set answer quality = 'how difficult the question was'
+    // Currently users can't rate questions, so we need to use either 1 for false or 5 for correct
+
     // Check if the question skipped -> answer is false and quality is 0
     if (answer === 'Note: questionSkipped') {
       isCorrect = false
       answerQuality = 0
-    } else {
+    } else if (answeredQuestion.type === 'general') {
       const answerValue = answer.map(answer => answer.value)
-      // Check if the received answer is correct
       if (answeredQuestion.question.item.selectCount === 'selectOne') {
         isCorrect = answeredQuestion.correctAnswers.value.includes(answerValue[0])
       } else if (answeredQuestion.question.item.selectCount === 'selectMany') {
         isCorrect = true
 
         for (let i = 0; i < answerValue.length; i++) {
-          //console.log(answerValue[i], ' is in ', answeredQuestion.correctAnswers.value, answeredQuestion.correctAnswers.value.includes(answerValue[i]))
           if (!answeredQuestion.correctAnswers.value.includes(answerValue[i])) {
             isCorrect = false
           }
         }
 
         for (let i = 0; i < answeredQuestion.correctAnswers.value.length; i++) {
-          //console.log(answeredQuestion.correctAnswers.value[i], ' is in ', answerValue, answerValue.includes(answeredQuestion.correctAnswers.value[i]))
           if (!answerValue.includes(answeredQuestion.correctAnswers.value[i])) {
             isCorrect = false
           }
@@ -319,10 +319,17 @@ questionRouter.post('/answer', async (req, res) => {
 
       }
 
-      // Set answer quality = 'how difficult the question was'
-      // Currently users can't rate questions, so we need to use either 1 for false or 5 for correct
-      answerQuality = isCorrect ? 5 : 1
+    } else if (answeredQuestion.type === 'fillInTheBlank') {
+      isCorrect = true
+
+      for (let i = 0; i < answeredQuestion.correctAnswers.value.length; i++) {
+        if (!answeredQuestion.correctAnswers.value[i].includes(answer[i])) {
+          isCorrect = false
+        }
+      }
     }
+
+    answerQuality = isCorrect ? 5 : 1
 
     // Check if user has a repetition item (= user has answered this question before)
     const foundRepetitionItem = await RepetitionItem.findOne({ 'user': userId, 'question': answeredQuestion._id })
