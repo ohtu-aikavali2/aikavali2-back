@@ -3,6 +3,7 @@ const mongoose = require('mongoose')
 const questionRouter = require('express').Router()
 const BaseQuestion = require('../models/baseQuestion')
 const GeneralQuestion = require('../models/generalQuestion')
+const FillInTheBlankQuestion = require('../models/fillInTheBlankQuestion')
 const CorrectAnswer = require('../models/correctAnswer')
 const User = require('../models/user')
 const Answer = require('../models/answer')
@@ -193,14 +194,21 @@ questionRouter.post('/', async (req, res) => {
     } = req.body
 
     // Validate parameters
-    if (!(correctAnswers && options && groupId)) {
+    if (!(correctAnswers && groupId)) {
       return res.status(422).json({ error: 'some params missing' })
     }
 
-    if (!Array.isArray(options)) {
-      return res.status(401).json({ error: 'options should be of type array' })
-    } else if (options.length === 0) {
-      return res.status(401).json({ error: 'there should be at least one option' })
+    if (type === 'general') {
+      if (!options) {
+        return res.status(422).json({ error: 'some params missing' })
+      }
+
+      if (!Array.isArray(options)) {
+        return res.status(401).json({ error: 'options should be of type array' })
+      } else if (options.length === 0) {
+        return res.status(401).json({ error: 'there should be at least one option' })
+      }
+
     }
 
     // Find and validate the given group
@@ -225,6 +233,10 @@ questionRouter.post('/', async (req, res) => {
     if (type === 'general') {
       kind = 'GeneralQuestion'
       newQuestion = new GeneralQuestion({ value, options: options, selectCount })
+      await newQuestion.save()
+    } else if (type === 'fillInTheBlank') {
+      kind = 'FillInTheBlankQuestion'
+      newQuestion = new FillInTheBlankQuestion({ value })
       await newQuestion.save()
     } else {
       return res.status(401).json({ error: 'no such question type!' })
