@@ -53,7 +53,11 @@ questionRouter.delete('/:id', async (req, res) => {
     }
 
     // Remove the question that the base question includes
-    await GeneralQuestion.findByIdAndRemove(baseQuestion.question.item)
+    if (baseQuestion.type === 'general') {
+      await GeneralQuestion.findByIdAndRemove(baseQuestion.question.item)
+    } else if (baseQuestion.type === 'fillInTheBlank') {
+      await FillInTheBlankQuestion.findByIdAndRemove(baseQuestion.question.item)
+    }
 
     // Remove the correct answer that the found question includes
     await CorrectAnswer.findByIdAndRemove(baseQuestion.correctAnswers)
@@ -172,7 +176,11 @@ questionRouter.get('/random', async (req, res) => {
       .map(a => [Math.random(), a])
       .sort((a, b) => a[0] - b[0])
       .map(a => a[1])
-    randQuestion.question.item.options = shuffleArray(randQuestion.question.item.options)
+
+    if(randQuestion.type === 'general') {
+      randQuestion.question.item.options = shuffleArray(randQuestion.question.item.options)
+    }
+
     // Tämä muutettu, saadaan tätä kautta ängettyä tarvittavaa infoa fronttiin
     res.status(200).json({ ...randQuestion.question, _id: randQuestion._id })
   } catch (e) {

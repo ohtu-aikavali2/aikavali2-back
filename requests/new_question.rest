@@ -5,6 +5,6 @@ Content-Type: application/json
     "value": "Täytä tyhjät kohdat",
     "correctAnswers": [ ["Kissa", "koira"], ["hauki", "lohi"] ],
     "type": "fillInTheBlank",
-    "groupId": "5d03876055194d6a49c461e6",
+    "groupId": "5d077c0efc42647c4f9f8b26",
     "concepts": ["5d00e5d9a1d17f31ec11fca9", "5d00e8dfa1d17f31ec11fcb2"]
 }
