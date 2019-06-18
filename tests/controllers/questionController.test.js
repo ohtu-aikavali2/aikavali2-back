@@ -57,6 +57,7 @@ describe('question controller', () => {
     await newCorrectAnswer2.save()
 
     const newCorrectAnswer3 = new CorrectAnswer({ value: [['kala'], ['eläin']] })
+    await newCorrectAnswer3.save()
 
     // Create some questions
     const options = ['a', 'b', 'c']
@@ -179,15 +180,15 @@ describe('question controller', () => {
       // about to be deleted and 1 for another question
       await api
         .post(`${testUrl}/answer`)
-        .send({ id: preQuestions[0].question.item._id, answer: ['test'] })
+        .send({ id: preQuestions[0].question.item._id, answer: [{ id: preQuestions[0].question.item._id, value: 'test' }] })
         .set('Authorization', `bearer ${ token }`)
       await api
         .post(`${testUrl}/answer`)
-        .send({ id: preQuestions[0].question.item._id, answer: ['test'] })
+        .send({ id: preQuestions[0].question.item._id, answer: [{ id: preQuestions[0].question.item._id, value: 'test' }] })
         .set('Authorization', `bearer ${ token }`)
       await api
         .post(`${testUrl}/answer`)
-        .send({ id: preQuestions[1].question.item._id, answer: ['test'] })
+        .send({ id: preQuestions[1].question.item._id, answer: [{ id: preQuestions[0].question.item._id, value: 'test' }] })
         .set('Authorization', `bearer ${ token }`)
 
       // Delete the first question which is a general question
@@ -214,7 +215,7 @@ describe('question controller', () => {
       // Check that the correct answers which are linked
       // to the deleted question are removed
       const correctAnswers = await CorrectAnswer.find()
-      expect(correctAnswers.length).toBe(1)
+      expect(correctAnswers.length).toBe(2)
 
       // Check that only 1 question has been removed
       let postQuestions = await BaseQuestion.find()
@@ -257,12 +258,14 @@ describe('question controller', () => {
       response = await api
         .get(`${testUrl}/random`)
         .set('Authorization', `bearer ${ token }`)
-      expect(response.body.item.options.length).toBe(4)
+      expect(response.body).toBeDefined()
+      expect(response.body.item.value).toBeDefined()
+
     })
   })
 
 
-/*   describe(`${testUrl}/answer`, () => {
+  describe(`${testUrl}/answer`, () => {
     test('POST', async () => {
       const questions = await BaseQuestion.find({}).populate('question.item')
 
@@ -287,29 +290,78 @@ describe('question controller', () => {
       expect(response.status).toBe(401)
       expect(response.body.error).toBeDefined()
 
+
+      //General question -selectOne checks
+
       // Check for correct answer
       response = await api
         .post(`${testUrl}/answer`)
-        .send({ id: questions[0].question.item._id, answer: 'test' })
+        .send({ id: questions[0].question.item._id, answer: [{ id: questions[0].question.item._id, value: 'test' }] })
         .set('Authorization', `bearer ${ token }`)
       expect(response.body.isCorrect).toBe(true)
 
-      // Check for incorrect answer
+       // Check for incorrect answer
       response = await api
         .post(`${testUrl}/answer`)
-        .send({ id: questions[0].question.item._id, answer: 'wrong' })
+        .send({ id: questions[0].question.item._id, answer: [{ id: questions[0].question.item._id, value: 'a' }] })
         .set('Authorization', `bearer ${ token }`)
       expect(response.body.isCorrect).toBe(false)
-      expect(response.body.correctAnswer).toBe('test')
+      expect(response.body.correctAnswer).toEqual(['test'])
+
+      //General question -selectMany checks
+
+      // Check for correct answer
+      response = await api
+        .post(`${testUrl}/answer`)
+        .send({ id: questions[1].question.item._id, answer: [{ id: questions[1].question.item._id, value: 'correct1' }, { id: questions[1].question.item._id, value: 'correct2' }, { id: questions[1].question.item._id, value: 'correct3' }] })
+        .set('Authorization', `bearer ${ token }`)
+      expect(response.body.isCorrect).toBe(true)
+
+      // Check for incorrect when not all correct answers have been selected
+      response = await api
+        .post(`${testUrl}/answer`)
+        .send({ id: questions[1].question.item._id, answer: [{ id: questions[1].question.item._id, value: 'correct2' }, { id: questions[1].question.item._id, value: 'correct3' }] })
+        .set('Authorization', `bearer ${ token }`)
+      expect(response.body.isCorrect).toBe(false)
+
+      // Check for incorrect when some incorrect choices have been selected
+      response = await api
+        .post(`${testUrl}/answer`)
+        .send({ id: questions[1].question.item._id, answer: [{ id: questions[1].question.item._id, value: 'a' }, { id: questions[1].question.item._id, value: 'correct2' }, { id: questions[1].question.item._id, value: 'correct3' }] })
+        .set('Authorization', `bearer ${ token }`)
+      expect(response.body.isCorrect).toBe(false)
+
+      //Fill in the blank checks
+
+      // Check for correct answer
+      response = await api
+        .post(`${testUrl}/answer`)
+        .send({ id: questions[2].question.item._id, answer: ['kala', 'eläin'] })
+        .set('Authorization', `bearer ${ token }`)
+      expect(response.body.isCorrect).toBe(true)
+
+      // Check for completely incorrect answer
+      response = await api
+        .post(`${testUrl}/answer`)
+        .send({ id: questions[2].question.item._id, answer: ['ihminen', 'ötökkä'] })
+        .set('Authorization', `bearer ${ token }`)
+      expect(response.body.isCorrect).toBe(false)
+
+      //Check for partially correct answer
+      response = await api
+        .post(`${testUrl}/answer`)
+        .send({ id: questions[2].question.item._id, answer: ['kala', 'ötökkä'] })
+        .set('Authorization', `bearer ${ token }`)
+      expect(response.body.isCorrect).toBe(false)
+
 
       // Check that new answer entities are created
       const answers = await Answer.find()
-      expect(answers.length).toBe(2)
-      console.log(token)
+      expect(answers.length).toBe(8)
 
       // Check that user has been linked to their answers
       const user = await User.findOne()
-      expect(user.answers.length).toBe(2)
+      expect(user.answers.length).toBe(8)
 
 
       // Check that skipping questions works as intended
@@ -317,16 +369,16 @@ describe('question controller', () => {
         .post(`${testUrl}/answer`)
         .send({ id: questions[1].question.item._id, answer: 'Note: questionSkipped' })
         .set('Authorization', `bearer ${ token }`)
-      const repetitionItem = await RepetitionItem.findOne({ 'user': user._id, 'question': questions[1]._id })
-      expect(repetitionItem.easinessFactor).toBe(1.7000000000000002)
+      expect(response.body.isCorrect).toBe(false)
 
-      // Check no more questions left
+      // Check that there are no more questions left
       response = await api
         .get(`${testUrl}/random`)
         .set('Authorization', `bearer ${ token }`)
-      expect(response.body.message).toBeDefined()
+      expect(response.body.message).toBe('Ei enempää kysymyksiä tällä hetkellä!')
+
     })
-  }) */
+  })
 })
 
 afterAll(() => {

@@ -368,7 +368,6 @@ questionRouter.post('/answer', async (req, res) => {
     // If the received answer was wrong, the response will contain the correct answers as well
     res.status(200).json({ isCorrect, ...({ correctAnswer: answeredQuestion.correctAnswers.value }) })
   } catch (e) {
-    console.log(e)
     res.status(500).json({ error: e.message })
   }
 })
