@@ -3,9 +3,8 @@ const jwt = require('jsonwebtoken')
 const { app, server, apiUrl } = require('../../src/server')
 const api = supertest(app)
 const BaseQuestion = require('../../src/models/baseQuestion')
-const PrintQuestion = require('../../src/models/printQuestion')
 const GeneralQuestion = require('../../src/models/generalQuestion')
-const CompileQuestion = require('../../src/models/compileQuestion')
+const FillInTheBlankQuestion = require('../../src/models/fillInTheBlankQuestion')
 const CorrectAnswer = require('../../src/models/correctAnswer')
 const Answer = require('../../src/models/answer')
 const User = require('../../src/models/user')
@@ -19,9 +18,8 @@ const testUrl = `${apiUrl}/questions`
 const getQuestionsOfType = async (type) => {
   switch (type) {
     case 'base': return await BaseQuestion.find({})
-    case 'compile': return await CompileQuestion.find({})
-    case 'print': return await PrintQuestion.find({})
     case 'general': return await GeneralQuestion.find({})
+    case 'fillInTheBlank': return await FillInTheBlankQuestion.find({})
     default: return []
   }
 }
@@ -35,9 +33,8 @@ describe('question controller', () => {
   beforeEach(async () => {
     // Remove all DB entities
     await BaseQuestion.deleteMany()
-    await PrintQuestion.deleteMany()
-    await CompileQuestion.deleteMany()
     await GeneralQuestion.deleteMany()
+    await FillInTheBlankQuestion.deleteMany()
     await CorrectAnswer.deleteMany()
     await Answer.deleteMany()
     await User.deleteMany()
@@ -56,12 +53,14 @@ describe('question controller', () => {
     await newCorrectAnswer1.save()
 
     // Create a CorrectAnswer
-    const newCorrectAnswer2 = new CorrectAnswer({ value: ['test'] })
+    const newCorrectAnswer2 = new CorrectAnswer({ value: ['correct1', 'correct2', 'correct3'] })
     await newCorrectAnswer2.save()
 
-    // Create a question
+    const newCorrectAnswer3 = new CorrectAnswer({ value: [['kala'], ['eläin']] })
+
+    // Create some questions
     const options = ['a', 'b', 'c']
-    const newGeneralQuestion = new GeneralQuestion({ value: 'test', options: options.concat('test'), type: 'general', groupId: testGroup._id })
+    const newGeneralQuestion = new GeneralQuestion({ value: 'test', options: options.concat('test'), type: 'general', groupId: testGroup._id, selectCount: 'selectOne' })
     await newGeneralQuestion.save()
     const q1 = new BaseQuestion({
       type: 'general',
@@ -71,8 +70,7 @@ describe('question controller', () => {
     })
     await q1.save()
 
-    // Create a CompileQuestion
-    const newGeneralQuestion2 = new GeneralQuestion({ value: 'test2', options: options.concat('test'), type: 'general', groupId: testGroup._id })
+    const newGeneralQuestion2 = new GeneralQuestion({ value: 'test2', options: options.concat(['correct1', 'correct2', 'correct3']), type: 'general', groupId: testGroup._id, selectCount: 'selectMany' })
     await newGeneralQuestion2.save()
     const q2 = new BaseQuestion({
       type: 'general',
@@ -82,19 +80,91 @@ describe('question controller', () => {
     })
     await q2.save()
 
+    const newFillInTheBlankQuestion = new FillInTheBlankQuestion({ value: 'hauki on TYHJÄ ja TYHJÄ' })
+    await newFillInTheBlankQuestion.save()
+    const q3 = new BaseQuestion({
+      type: 'fillInTheBlank',
+      question: { kind: 'FillInTheBlankQuestion', item: newFillInTheBlankQuestion._id },
+      correctAnswers: newCorrectAnswer3._id,
+      concepts: testConcepts
+    })
+    await q3.save()
+
     // Generate a user and store the
     // received token'
     const user = new User({ _id: 1, administrator: true, username: 'test user' })
     await user.save()
     token = jwt.sign({ userId: user._id, administrator: user.administrator }, process.env.SECRET)
-    console.log(token)
   })
 
   describe(testUrl, () => {
     test('GET', async () => {
       const response = await api
         .get(testUrl)
-      expect(response.body.length).toBe(2)
+      expect(response.status).toBe(200)
+      expect(response.body.length).toBe(3)
+    })
+    test('POST', async () => {
+      // Test validation
+      let response = await api
+        .post(`${testUrl}`)
+        .send({ value: '?', correctAnswers: ['a'], options: ['WRONG!'], type: 'general' })
+      expect(response.status).toBe(422)
+      expect(response.body.error).toBe('some params missing')
+
+      response = await api
+        .post(`${testUrl}`)
+        .send({ value: '?', correctAnswers: ['a'], groupId: testGroup._id , type: 'general' })
+      expect(response.status).toBe(422)
+      expect(response.body.error).toBe('options missing from general question')
+
+      response = await api
+        .post(`${testUrl}`)
+        .send({ value: '?', correctAnswers: ['a'], options: 'WRONG', groupId: testGroup._id , type: 'general' })
+      expect(response.status).toBe(401)
+      expect(response.body.error).toBe('options should be of type array')
+
+      response = await api
+        .post(`${testUrl}`)
+        .send({ value: '?', correctAnswers: ['a'], options: [], groupId: testGroup._id , type: 'general' })
+      expect(response.status).toBe(401)
+      expect(response.body.error).toBe('there should be at least one option')
+
+      response = await api
+        .post(`${testUrl}`)
+        .send({ value: '?', correctAnswers: ['a'], options: ['WRONG'], groupId: testGroup._id , type: 'general', concepts: 'concept' })
+      expect(response.status).toBe(401)
+      expect(response.body.error).toBe('concepts should be of type array')
+
+      response = await api
+        .post(`${testUrl}`)
+        .send({ value: '?', correctAnswers: ['a'], options: ['WRONG'], groupId: testGroup._id , type: 'general', concepts: [] })
+      expect(response.status).toBe(401)
+      expect(response.body.error).toBe('there should be at least one concept')
+
+      // Get general questions before adding new ones
+      const originalGeneralQuestions = await getQuestionsOfType('general')
+
+      response = await api
+        .post(`${testUrl}`)
+        .send({ value: '?', correctAnswers: ['a'], options: ['b', 'c', 'd'], groupId: testGroup._id, type: 'general', concepts: [(new Concept({ name: test }))] })
+      expect(response.status).toBe(201)
+
+      // A new general question is added
+      const updatedGeneralQuestions = await getQuestionsOfType('general')
+      expect(updatedGeneralQuestions.length).toBe(originalGeneralQuestions.length + 1)
+
+      // Get fill in the blank questions before adding new ones
+      const originalFillInTheBlankQuestions = await getQuestionsOfType('fillInTheBlank')
+
+      response = await api
+        .post(`${testUrl}`)
+        .send({ value: 'KissaTYHJÄ on TYHJÄ', correctAnswers: [['kala'], ['kala', 'eläin']], groupId: testGroup._id, type: 'fillInTheBlank', concepts: [(new Concept({ name: test }))] })
+      expect(response.status).toBe(201)
+
+      // A new fill in the blank question is added
+      const updatedFillInTheBlankQuestions = await getQuestionsOfType('fillInTheBlank')
+      expect(updatedFillInTheBlankQuestions.length).toBe(originalFillInTheBlankQuestions.length + 1)
     })
   })
 
@@ -103,44 +173,43 @@ describe('question controller', () => {
       jest.setTimeout(10000)
       // Get initial questions
       const preQuestions = await BaseQuestion.find({})
-      expect(preQuestions.length).toBe(2)
+      expect(preQuestions.length).toBe(3)
 
       // Create 2 answers for the question that is
       // about to be deleted and 1 for another question
       await api
         .post(`${testUrl}/answer`)
-        .send({ id: preQuestions[0].question.item._id, answer: 'test' })
+        .send({ id: preQuestions[0].question.item._id, answer: ['test'] })
         .set('Authorization', `bearer ${ token }`)
       await api
         .post(`${testUrl}/answer`)
-        .send({ id: preQuestions[0].question.item._id, answer: 'test' })
+        .send({ id: preQuestions[0].question.item._id, answer: ['test'] })
         .set('Authorization', `bearer ${ token }`)
       await api
         .post(`${testUrl}/answer`)
-        .send({ id: preQuestions[1].question.item._id, answer: 'test' })
+        .send({ id: preQuestions[1].question.item._id, answer: ['test'] })
         .set('Authorization', `bearer ${ token }`)
 
-      // Delete the first questions
+      // Delete the first question which is a general question
       let response = await api
         .delete(`${testUrl}/${preQuestions[0]._id}`)
         .set('Authorization', `bearer ${ token }`)
       expect(response.status).toBe(200)
       expect(response.body.message).toBe('deleted successfully!')
 
-      // Since the first question is of type general, check that
-      // there are no more questions of type general
+      // Check that there is still one question of type general
       const generalQuestions = await getQuestionsOfType('general')
       expect(generalQuestions.length).toBe(1)
 
-      /*       // Check that all answers relating to the
+      // Check that all answers relating to the
       // removed question have been deleted
-      const postAnswers = await Answer.find()
-      expect(postAnswers.length).toBe(1) */
+      const postAnswers = await Answer.find({ })
+      expect(postAnswers.length).toBe(1)
 
-      /*       // Check that the answers which are linked to the
+      // Check that the answers which are linked to the
       // deleted question are removed from the user
       const user = await User.findOne()
-      expect(user.answers.length).toBe(1) */
+      expect(user.answers.length).toBe(1)
 
       // Check that the correct answers which are linked
       // to the deleted question are removed
@@ -148,7 +217,18 @@ describe('question controller', () => {
       expect(correctAnswers.length).toBe(1)
 
       // Check that only 1 question has been removed
-      const postQuestions = await BaseQuestion.find()
+      let postQuestions = await BaseQuestion.find()
+      expect(postQuestions.length).toBe(2)
+
+      // Delete a fillInTheBlankQuestion as well
+      response = await api
+        .delete(`${testUrl}/${preQuestions[2]._id}`)
+        .set('Authorization', `bearer ${ token }`)
+      expect(response.status).toBe(200)
+      expect(response.body.message).toBe('deleted successfully!')
+
+      //Check that there is only one question left
+      postQuestions = await BaseQuestion.find()
       expect(postQuestions.length).toBe(1)
 
       // Check validation
@@ -178,40 +258,6 @@ describe('question controller', () => {
         .get(`${testUrl}/random`)
         .set('Authorization', `bearer ${ token }`)
       expect(response.body.item.options.length).toBe(4)
-    })
-  })
-
-  describe(`${testUrl}`, () => {
-    test('POST', async () => {
-      let response = await api
-        .post(`${testUrl}`)
-        .send({ value: '?', correctAnswers: ['a'], options: 'WRONG!', type: 'general' })
-      expect(response.body.error).toBeDefined()
-
-      response = await api
-        .post(`${testUrl}`)
-        .send({})
-      expect(response.status).toBe(422)
-      expect(response.body.error).toBeDefined()
-
-      const originalGeneralQuestions = await getQuestionsOfType('general')
-      await api
-        .post(`${testUrl}`)
-        .send({ value: '?', correctAnswers: ['a'], options: ['b', 'c', 'd'], groupId: testGroup._id, type: 'general', concepts: [(new Concept({ name: test }))] })
-      const updatedGeneralQuestions = await getQuestionsOfType('general')
-      expect(updatedGeneralQuestions.length).toBe(originalGeneralQuestions.length + 1)
-
-      response = await api
-        .post(`${testUrl}`)
-        .send({ correctAnswer: 'a', options: 'WRONG!' })
-      expect(response.body.error).toBeDefined()
-
-      response = await api
-        .post(`${testUrl}`)
-        .send({})
-      expect(response.status).toBe(422)
-      expect(response.body.error).toBeDefined()
-
     })
   })
 
