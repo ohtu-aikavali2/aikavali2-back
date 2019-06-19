@@ -300,7 +300,7 @@ describe('question controller', () => {
         .set('Authorization', `bearer ${ token }`)
       expect(response.body.isCorrect).toBe(true)
 
-       // Check for incorrect answer
+      // Check for incorrect answer
       response = await api
         .post(`${testUrl}/answer`)
         .send({ id: questions[0].question.item._id, answer: [{ id: questions[0].question.item._id, value: 'a' }] })
