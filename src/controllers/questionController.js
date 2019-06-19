@@ -4,6 +4,7 @@ const questionRouter = require('express').Router()
 const BaseQuestion = require('../models/baseQuestion')
 const GeneralQuestion = require('../models/generalQuestion')
 const FillInTheBlankQuestion = require('../models/fillInTheBlankQuestion')
+const DragAndDropQuestion = require('../models/dragAndDropQuestion')
 const CorrectAnswer = require('../models/correctAnswer')
 const User = require('../models/user')
 const Answer = require('../models/answer')
@@ -245,6 +246,10 @@ questionRouter.post('/', async (req, res) => {
     } else if (type === 'fillInTheBlank') {
       kind = 'FillInTheBlankQuestion'
       newQuestion = new FillInTheBlankQuestion({ value })
+      await newQuestion.save()
+    } else if (type === 'dragAndDrop') {
+      kind = 'DragAndDropQuestion'
+      newQuestion = new DragAndDropQuestion({ value, options })
       await newQuestion.save()
     } else {
       return res.status(401).json({ error: 'no such question type!' })

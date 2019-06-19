@@ -2,9 +2,10 @@ POST http://localhost:8080/api/v1/questions
 Content-Type: application/json
 
 {
-    "value": "Täytä tyhjät kohdat",
-    "correctAnswers": [ ["Kissa", "koira"], ["hauki", "lohi"] ],
-    "type": "fillInTheBlank",
+    "value": "Järjestä palat paikoilleen",
+    "correctAnswers": [ "int x = 5;", "System.out.println(x)" ],
+    "options": [ "int x = 5;", "System.out.println(x)", "hämy", "System.out.println(y)" ],
+    "type": "dragAndDrop",
     "groupId": "5d077c0efc42647c4f9f8b26",
     "concepts": ["5d00e5d9a1d17f31ec11fca9", "5d00e8dfa1d17f31ec11fcb2"]
 }
