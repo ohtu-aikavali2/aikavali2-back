@@ -180,7 +180,7 @@ questionRouter.get('/random', async (req, res) => {
       .sort((a, b) => a[0] - b[0])
       .map(a => a[1])
 
-    if(randQuestion.type === 'general') {
+    if(randQuestion.type === 'general' || randQuestion.type === 'dragAndDrop') {
       randQuestion.question.item.options = shuffleArray(randQuestion.question.item.options)
     }
 
@@ -336,10 +336,17 @@ questionRouter.post('/answer', async (req, res) => {
 
     } else if (answeredQuestion.type === 'fillInTheBlank') {
       isCorrect = true
-
-      for (let i = 0; i < answeredQuestion.correctAnswers.value.length; i++) {
-        if (!answeredQuestion.correctAnswers.value[i].includes(answer[i])) {
-          isCorrect = false
+      if (answeredQuestion.correctAnswers.value.length !== answer.length) {
+        isCorrect = false
+      } else {
+        for (let i = 0; i < answeredQuestion.correctAnswers.value.length; i++) {
+          //make the check case insensitive
+          answeredQuestion.correctAnswers.value[i] = answeredQuestion.correctAnswers.value[i].map(function(x){ return x.toUpperCase() })
+          console.log('oikee', answeredQuestion.correctAnswers.value)
+          console.log('saatu', answer)
+          if (!answeredQuestion.correctAnswers.value[i].includes(answer[i].toUpperCase())) {
+            isCorrect = false
+          }
         }
       }
     } else if (answeredQuestion.type === 'dragAndDrop') {
@@ -348,7 +355,7 @@ questionRouter.post('/answer', async (req, res) => {
       console.log('oikea vastaus', answeredQuestion.correctAnswers.value)
       console.log('saatu vastaus', answer)
       for (let i = 0; i < answeredQuestion.correctAnswers.value.length; i++) {
-        if (!answeredQuestion.correctAnswers.value[i] === answer[i]) {
+        if (answeredQuestion.correctAnswers.value[i] !== answer[i]) {
           //console.log('onko sama?', answeredQuestion.correctAnswers.value[i], ' ja ', answer[i])
           isCorrect = false
         }
@@ -387,6 +394,7 @@ questionRouter.post('/answer', async (req, res) => {
     // If the received answer was wrong, the response will contain the correct answers as well
     res.status(200).json({ isCorrect, ...({ correctAnswer: answeredQuestion.correctAnswers.value }) })
   } catch (e) {
+    console.log(e)
     res.status(500).json({ error: e.message })
   }
 })
