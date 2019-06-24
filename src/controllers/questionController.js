@@ -58,6 +58,8 @@ questionRouter.delete('/:id', async (req, res) => {
       await GeneralQuestion.findByIdAndRemove(baseQuestion.question.item)
     } else if (baseQuestion.type === 'fillInTheBlank') {
       await FillInTheBlankQuestion.findByIdAndRemove(baseQuestion.question.item)
+    } else if (baseQuestion.type === 'dragAndDrop') {
+      await DragAndDropQuestion.findByIdAndRemove(baseQuestion.question.item)
     }
 
     // Remove the correct answer that the found question includes
