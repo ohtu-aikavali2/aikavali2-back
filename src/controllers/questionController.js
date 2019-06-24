@@ -340,6 +340,18 @@ questionRouter.post('/answer', async (req, res) => {
           isCorrect = false
         }
       }
+    } else if (answeredQuestion.type === 'dragAndDrop') {
+      isCorrect = true
+      // debug tulostus
+      console.log('oikea vastaus', answeredQuestion.correctAnswers.value)
+      console.log('saatu vastaus', answer)
+      for (let i = 0; i < answeredQuestion.correctAnswers.value.length; i++) {
+        if (!answeredQuestion.correctAnswers.value[i] === answer[i]) {
+          //console.log('onko sama?', answeredQuestion.correctAnswers.value[i], ' ja ', answer[i])
+          isCorrect = false
+        }
+      }
+
     }
 
     answerQuality = isCorrect ? 5 : 1
