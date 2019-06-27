@@ -13,7 +13,7 @@ Create .env file:
 
 ```touch .env```
 
-Add two environmental variables into the .env file:
+Add environmental variables into the .env file:
 
 ```
 PORT=X
@@ -22,7 +22,7 @@ DB_URI_DEV=URL_TO_MONGO_DB_DEV
 DB_URI_TEST=URL_TO_MONGO_DB_TEST
 DB_URI=URL_TO_MONGO_DB_PROD
 SECRET=Z
-ADMIN_EMAILS=ADMIN_EMAILS
+ADMIN_EMAILS=YOUR_TMC_EMAIL
 ```
 
 Start the project:
