@@ -342,8 +342,6 @@ questionRouter.post('/answer', async (req, res) => {
         for (let i = 0; i < answeredQuestion.correctAnswers.value.length; i++) {
           //make the check case insensitive
           answeredQuestion.correctAnswers.value[i] = answeredQuestion.correctAnswers.value[i].map(function(x){ return x.toUpperCase() })
-          console.log('oikee', answeredQuestion.correctAnswers.value)
-          console.log('saatu', answer)
           if (!answeredQuestion.correctAnswers.value[i].includes(answer[i].toUpperCase())) {
             isCorrect = false
           }
@@ -351,16 +349,15 @@ questionRouter.post('/answer', async (req, res) => {
       }
     } else if (answeredQuestion.type === 'dragAndDrop') {
       isCorrect = true
-      // debug tulostus
-      console.log('oikea vastaus', answeredQuestion.correctAnswers.value)
-      console.log('saatu vastaus', answer)
-      for (let i = 0; i < answeredQuestion.correctAnswers.value.length; i++) {
-        if (answeredQuestion.correctAnswers.value[i] !== answer[i]) {
-          //console.log('onko sama?', answeredQuestion.correctAnswers.value[i], ' ja ', answer[i])
-          isCorrect = false
+      if (answeredQuestion.correctAnswers.value.length !== answer.length) {
+        isCorrect = false
+      } else {
+        for (let i = 0; i < answeredQuestion.correctAnswers.value.length; i++) {
+          if (answeredQuestion.correctAnswers.value[i] !== answer[i]) {
+            isCorrect = false
+          }
         }
       }
-
     }
 
     answerQuality = isCorrect ? 5 : 1
