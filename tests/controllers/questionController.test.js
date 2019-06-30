@@ -376,13 +376,6 @@ describe('question controller', () => {
         .set('Authorization', `bearer ${ token }`)
       expect(response.body.isCorrect).toBe(true)
 
-      // Check for completely incorrect answer
-      response = await api
-        .post(`${testUrl}/answer`)
-        .send({ id: questions[3].question.item._id, answer: ['a', 'b', 'c'] })
-        .set('Authorization', `bearer ${ token }`)
-      expect(response.body.isCorrect).toBe(false)
-
       // Check for partially correct
       response = await api
         .post(`${testUrl}/answer`)
@@ -400,11 +393,11 @@ describe('question controller', () => {
 
       // Check that new answer entities are created
       const answers = await Answer.find()
-      expect(answers.length).toBe(12)
+      expect(answers.length).toBe(11)
 
       // Check that user has been linked to their answers
       const user = await User.findOne()
-      expect(user.answers.length).toBe(12)
+      expect(user.answers.length).toBe(11)
 
 
       // Check that skipping questions works as intended
