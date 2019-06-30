@@ -367,14 +367,44 @@ describe('question controller', () => {
         .set('Authorization', `bearer ${ token }`)
       expect(response.body.isCorrect).toBe(false)
 
+      // Drag and drop checks
+
+      // Check for correct answer
+      response = await api
+        .post(`${testUrl}/answer`)
+        .send({ id: questions[3].question.item._id, answer: ['correct1', 'correct2', 'correct3'] })
+        .set('Authorization', `bearer ${ token }`)
+      expect(response.body.isCorrect).toBe(true)
+
+      // Check for completely incorrect answer
+      response = await api
+        .post(`${testUrl}/answer`)
+        .send({ id: questions[3].question.item._id, answer: ['a', 'b', 'c'] })
+        .set('Authorization', `bearer ${ token }`)
+      expect(response.body.isCorrect).toBe(false)
+
+      // Check for partially correct
+      response = await api
+        .post(`${testUrl}/answer`)
+        .send({ id: questions[3].question.item._id, answer: ['correct1', 'correct2', 'c'] })
+        .set('Authorization', `bearer ${ token }`)
+      expect(response.body.isCorrect).toBe(false)
+
+      // Check when an extra piece is selected
+      response = await api
+        .post(`${testUrl}/answer`)
+        .send({ id: questions[3].question.item._id, answer: ['correct1', 'correct2', 'correct3', 'a'] })
+        .set('Authorization', `bearer ${ token }`)
+      expect(response.body.isCorrect).toBe(false)
+
 
       // Check that new answer entities are created
       const answers = await Answer.find()
-      expect(answers.length).toBe(8)
+      expect(answers.length).toBe(12)
 
       // Check that user has been linked to their answers
       const user = await User.findOne()
-      expect(user.answers.length).toBe(8)
+      expect(user.answers.length).toBe(12)
 
 
       // Check that skipping questions works as intended
